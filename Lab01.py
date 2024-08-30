@@ -26,7 +26,9 @@ class PerceptronLearning:
         One step of the perceptron learning algorithm
         """
         y_pred = self.forward(x)
+        # print("y_pred", y_pred, "and y?", y)
         for i, y_unit in enumerate(y_pred):
+            # print("y_unit", y_unit, "i:", i)
             if y_unit != y[i]:
                 if y[i] == 1:
                     self.w[:, i] += self.study_rate * x
@@ -42,6 +44,7 @@ class PerceptronLearning:
         """
         x, y = data
         for i in range(len(x)):
+            # print("x[i] and y[i]", x[i], y[i])
             self._one_step(x[i], y[i])
 
     def forward(self, x: np.ndarray) -> np.ndarray:
@@ -50,6 +53,7 @@ class PerceptronLearning:
         :param x: the input data
         :return: the output data
         """
+        # print("checking forward", x, self.w, np.dot(x, self.w))
         return np.where(np.dot(x, self.w) > self.threshold, 1, 0)
 
 
@@ -98,24 +102,48 @@ class DeltaRuleLearning:
 class Test(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(Test, self).__init__(*args, **kwargs)
-        self.n = 100
+        self.n = 10
         self.threshold = 0
         self.s_r = 0.1
         self.input_layer_len = 10
-        self.output_layer_len = 2
+        self.output_layer_len = 1
         
-        mA = [2.0, -1.0]
-        sigmaA = 0.8
-        mB = [-2.0, 1.0]
-        sigmaB = 0.8 
+        self.data = self.generate_data()
+        # print(self.data)
 
-        self.class1 = self.generate_data(self.n, mA, sigmaA)
-        self.class0 = self.generate_data(self.n, mB, sigmaB)
-
-    @staticmethod
-    def generate_data(n, mean, sigma):
+    def generate_data(self):
         """
         Generate random data for two classes.
+        # TODO: modularize for delta rule
+
+        Parameters:
+            No parameters for now
+        
+        Returns:
+            point_array (np.ndarray): Data points for the class, shape (2, n).
+        """
+
+        mA = [1.0, -0.5]
+        sigmaA = 0.5
+        mB = [-1.0, 0]
+        sigmaB = 0.5 
+
+        self.class1 = self.generate_array(self.n, mA, sigmaA)
+        self.class0 = self.generate_array(self.n, mB, sigmaB)
+
+        # Determine different ways to stack the classes
+        data = np.stack([self.class1, self.class0]) 
+
+        labels1 = np.full((self.n, 1), 1)
+        labels0 = np.full((self.n, 1), 0)
+
+        labels = np.vstack([labels1, labels0])
+
+        return data, labels
+
+    def generate_array(self, n, mean, sigma):
+        """
+        Generate random data for a class.
 
         Parameters:
             n (int): Number of data points per class.
@@ -128,10 +156,10 @@ class Test(unittest.TestCase):
         # Convert means to NumPy arrays
         mean = np.array(mean)
 
-        # Generate data for class A
+        # Generate data for the class
         point_array = np.array([
-            np.random.randn(n) * sigma + mean[0],  # Feature 1 for class A
-            np.random.randn(n) * sigma + mean[1]   # Feature 2 for class A
+            np.random.randn(n) * sigma + mean[0],   # Feature 1 for the class
+            np.random.randn(n) * sigma + mean[1]    # Feature 2 for the class
         ])
 
         return point_array
@@ -178,11 +206,12 @@ class Test(unittest.TestCase):
     # def test_perceptron_learning(self):
     #     perceptron = PerceptronLearning(self.input_layer_len, self.output_layer_len, self.threshold, self.s_r)
     #     perceptron.learning_loop(self.data)
-    #     # self.plot_line_from_vector(perceptron.w, title="Perceptron Learning Data")
+        # self.plot_line_from_vector(perceptron.w, title="Perceptron Learning Data")
 
     # def test_delta_rule_learning(self):
     #     delta_rule = DeltaRuleLearning(self.input_layer_len, self.output_layer_len, self.s_r)
-    #     delta_rule.learning_loop((self.class0, self.class1))
+    #     delta_rule.learning_loop(self.data)
+    #     self.plot_line_from_vector(delta_rule.w, title="Delta Rule Learning Data")
 
     def test_test(self):
         direction_vector = [1, 0]
