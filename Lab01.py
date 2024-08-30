@@ -3,13 +3,6 @@ import unittest
 import numpy as np
 
 
-def generate_data(input_num, output_num, num) -> (np.ndarray, np.ndarray):
-    """
-    Generate random data for the perceptron learning algorithm
-    """
-    return np.random.rand(num, input_num), np.random.randint(0, 2, (num, output_num))
-
-
 class PerceptronLearning:
     """
     Perceptron learning algorithm
@@ -20,6 +13,7 @@ class PerceptronLearning:
         threshold: the threshold of the perceptron
         study_rate: the study rate of the perceptron
     """
+
     def __init__(self, input_num: int, output_num: int, threshold: float, study_rate: float):
         self.w = np.zeros((input_num, output_num))
         self.threshold = threshold
@@ -102,14 +96,26 @@ class DeltaRuleLearning:
 
 
 class Test(unittest.TestCase):
-    def test_both_learning(self):
-        n = 100
-        threshold = 0
-        s_r = 0.1
-        input_layer_len = 10
-        output_layer_len = 2
-        data = generate_data(10, 2, n)
-        perceptron = PerceptronLearning(input_layer_len, output_layer_len, threshold, s_r)
-        perceptron.learning_loop(data)
-        delta_rule = DeltaRuleLearning(input_layer_len, output_layer_len, s_r)
-        delta_rule.learning_loop(data)
+    def __init__(self):
+        super().__init__()
+        self.n = 100
+        self.threshold = 0
+        self.s_r = 0.1
+        self.input_layer_len = 10
+        self.output_layer_len = 2
+        self.data = self.generate_data(10, 2, self.n)
+
+    @staticmethod
+    def generate_data(input_num, output_num, num) -> (np.ndarray, np.ndarray):
+        """
+        Generate random data for the perceptron learning algorithm
+        """
+        return np.random.rand(num, input_num), np.random.randint(0, 2, (num, output_num))
+
+    def test_perceptron_learning(self):
+        perceptron = PerceptronLearning(self.input_layer_len, self.output_layer_len, self.threshold, self.s_r)
+        perceptron.learning_loop(self.data)
+
+    def test_delta_rule_learning(self):
+        delta_rule = DeltaRuleLearning(self.input_layer_len, self.output_layer_len, self.s_r)
+        delta_rule.learning_loop(self.data)
