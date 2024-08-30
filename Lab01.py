@@ -96,8 +96,8 @@ class DeltaRuleLearning:
 
 
 class Test(unittest.TestCase):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super(Test, self).__init__(*args, **kwargs)
         self.n = 100
         self.threshold = 0
         self.s_r = 0.1
