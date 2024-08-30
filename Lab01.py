@@ -1,7 +1,7 @@
 import unittest
 
 import numpy as np
-
+import matplotlib.pyplot as plt
 
 class PerceptronLearning:
     """
@@ -103,19 +103,87 @@ class Test(unittest.TestCase):
         self.s_r = 0.1
         self.input_layer_len = 10
         self.output_layer_len = 2
-        self.data = self.generate_data(10, 2, self.n)
+        
+        mA = [2.0, -1.0]
+        sigmaA = 0.8
+        mB = [-2.0, 1.0]
+        sigmaB = 0.8 
+
+        self.class1 = self.generate_data(self.n, mA, sigmaA)
+        self.class0 = self.generate_data(self.n, mB, sigmaB)
 
     @staticmethod
-    def generate_data(input_num, output_num, num) -> (np.ndarray, np.ndarray):
+    def generate_data(n, mean, sigma):
         """
-        Generate random data for the perceptron learning algorithm
+        Generate random data for two classes.
+
+        Parameters:
+            n (int): Number of data points per class.
+            mean (list or array): Mean for the class (2D).
+            sigma (float): Standard deviation for the class.
+
+        Returns:
+            point_array (np.ndarray): Data points for the class, shape (2, n).
         """
-        return np.random.rand(num, input_num), np.random.randint(0, 2, (num, output_num))
+        # Convert means to NumPy arrays
+        mean = np.array(mean)
 
-    def test_perceptron_learning(self):
-        perceptron = PerceptronLearning(self.input_layer_len, self.output_layer_len, self.threshold, self.s_r)
-        perceptron.learning_loop(self.data)
+        # Generate data for class A
+        point_array = np.array([
+            np.random.randn(n) * sigma + mean[0],  # Feature 1 for class A
+            np.random.randn(n) * sigma + mean[1]   # Feature 2 for class A
+        ])
 
-    def test_delta_rule_learning(self):
-        delta_rule = DeltaRuleLearning(self.input_layer_len, self.output_layer_len, self.s_r)
-        delta_rule.learning_loop(self.data)
+        return point_array
+
+    def plot_config(self, ax, title="Generated Data"):
+        ax.set_xlim(-2, 2)
+        ax.set_ylim(-2, 2) 
+        ax.set_xlabel('x1')
+        ax.set_ylabel('x2')
+        ax.set_title(title)
+        ax.legend()
+
+    def plot_data(self, ax):
+        """
+        Plot the generated data for class 1 and class 0.
+        """
+        ax.scatter(self.class1[0, :], self.class1[1, :], color='blue', label='Class 1')
+        ax.scatter(self.class0[0, :], self.class0[1, :], color='red', label='Class 0')
+
+    def plot_line_from_vector(self, direction_vector: np.ndarray, point=np.array([0, 0]), title="Generated Data"):
+        """
+        Plot a 2D line given a direction vector and a point.
+
+        Parameters:
+            direction_vector (np.ndarray): The direction vector [a, b] of the line.
+            point (np.ndarray): A point [x0, y0] through which the line passes (default is the origin).
+        """
+        fig, ax = plt.subplots()
+
+        ax.quiver(point[0], point[1], direction_vector[0], direction_vector[1], 
+               angles='xy', scale_units='xy', scale=1, color='C0')
+        try:
+            slope = -direction_vector[0] / direction_vector[1]
+        except ZeroDivisionError:
+            slope = float('inf')
+
+        ax.axline(xy1=point, slope=slope, color='C0', label='Decision Line')
+
+        self.plot_data(ax)
+        self.plot_config(ax, title)
+
+        plt.show()
+
+    # def test_perceptron_learning(self):
+    #     perceptron = PerceptronLearning(self.input_layer_len, self.output_layer_len, self.threshold, self.s_r)
+    #     perceptron.learning_loop(self.data)
+    #     # self.plot_line_from_vector(perceptron.w, title="Perceptron Learning Data")
+
+    # def test_delta_rule_learning(self):
+    #     delta_rule = DeltaRuleLearning(self.input_layer_len, self.output_layer_len, self.s_r)
+    #     delta_rule.learning_loop((self.class0, self.class1))
+
+    def test_test(self):
+        direction_vector = [1, 0]
+        self.plot_line_from_vector(direction_vector)
