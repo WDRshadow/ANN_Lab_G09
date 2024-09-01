@@ -18,7 +18,7 @@ class PerceptronLearning:
     """
 
     def __init__(self, input_num: int, output_num: int, threshold: float, study_rate: float = 0.1, epochs: int = 100):
-        self.w = np.zeros((input_num + 1, output_num))
+        self.w = np.ones((input_num + 1, output_num))
         self.threshold = threshold
         self.study_rate = study_rate
         self.input_num = input_num
@@ -32,9 +32,12 @@ class PerceptronLearning:
         y_pred = self.forward(x)
         for i, y_i in enumerate(y_pred):
             for j, y_j in enumerate(y_i):
-                self.w[:, j] += self.study_rate * (y[i, j] - y_j) * np.insert(x[i], 0, 1)
-        # TODO: check if the classification is correct
-
+                if (all_points_on_propper_side(self.w, x, y)): 
+                    return
+            
+                if (not is_point_on_propper_side(self.w, x[i], y[i, j])):
+                    self.w[:, j] += self.study_rate * (y[i, j] - y_j) * np.insert(x[i], 0, 1)
+        
     def learning_loop(self, data: (np.ndarray, np.ndarray)):
         """
         The learning loop of the perceptron learning algorithm
@@ -42,7 +45,12 @@ class PerceptronLearning:
         """
         x, y = data
         for e in range(self.epochs):
+            if (all_points_on_propper_side(self.w, x, y)): 
+                print("all points are correct, n of epochs: ", e)
+                return
+
             self._one_step(x, y)
+        raise RuntimeError("Values are not linearly separable in specified epochs.") 
 
     def forward(self, x: np.ndarray) -> np.ndarray:
         """
@@ -126,9 +134,9 @@ class Test(unittest.TestCase):
             labels (np.ndarray): Labels for the classes, shape (2*n, 1). Example: [[1], [0], ...]
         """
 
-        mA = [1.0, -0.5]
+        mA = [-1.0, -0.5]
         sigmaA = 0.5
-        mB = [-1.0, 0.5]
+        mB = [1.0, 0.5]
         sigmaB = 0.5
 
         self.class1 = self.generate_array(self.n, mA, sigmaA)
@@ -171,24 +179,24 @@ class Test(unittest.TestCase):
     def test_perceptron_learning(self):
         perceptron = PerceptronLearning(self.input_layer_len, self.output_layer_len, self.threshold, self.s_r)
         perceptron.learning_loop(self.data)
-        plot_line_from_weights(self.class0, self.class1, perceptron.w)
+        plot_line_from_vector(self.class0, self.class1, perceptron.w, title="Perceptron Learning Data")
 
     def test_delta_rule_learning(self):
         delta_rule = DeltaRuleLearning(self.input_layer_len, self.output_layer_len, self.s_r)
         delta_rule.learning_loop(self.data)
-        plot_line_from_weights(self.class0, self.class1, delta_rule.w)
+        plot_line_from_vector(self.class0, self.class1, delta_rule.w, title="Delta Rule Learning Data")
 
-    def test_test(self):
-        direction_vector = [1, 0]
-        plot_line_from_vector(self.class0, self.class1, direction_vector)
+    # def test_test(self):
+    #     direction_vector = [0, 1, 0]
+    #     plot_line_from_vector(self.class0, self.class1, direction_vector)
 
-        point = (1, 1)
-        print(is_point_on_positive_side(direction_vector, point))  # Output: True (depends on dir vector)
-        print(is_point_on_propper_side(direction_vector, point, 1))  # Output: True (depends on dir vector)
+    #     point = (1, 1)
+    #     print(is_point_on_positive_side(direction_vector, point))  # Output: True (depends on dir vector)
+    #     print(is_point_on_propper_side(direction_vector, point, 1))  # Output: True (depends on dir vector)
 
-        point = (-1, -1)
-        print(is_point_on_positive_side(direction_vector, point))  # Output: False (depends on dir vector)
-        print(is_point_on_propper_side(direction_vector, point, -1))  # Output: True (depends on dir vector)
+    #     point = (-1, -1)
+    #     print(is_point_on_positive_side(direction_vector, point))  # Output: False (depends on dir vector)
+    #     print(is_point_on_propper_side(direction_vector, point, -1))  # Output: True (depends on dir vector)
 
-        points, values = self.data
-        print(all_points_on_propper_side(direction_vector, points, values)) # Output: Depends on the point generation
+    #     points, values = self.data
+    #     print(all_points_on_propper_side(direction_vector, points, values)) # Output: Depends on the point generation

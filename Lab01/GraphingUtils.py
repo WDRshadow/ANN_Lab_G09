@@ -31,10 +31,11 @@ def plot_line_from_vector(class0: np.ndarray, class1: np.ndarray, direction_vect
     """
     fig, ax = plt.subplots()
 
-    ax.quiver(point[0], point[1], direction_vector[0], direction_vector[1],
+    ax.quiver(point[0], point[1], direction_vector[1], direction_vector[2],
               angles='xy', scale_units='xy', scale=1, color='C0')
     try:
-        slope = -direction_vector[0] / direction_vector[1]
+        slope = -direction_vector[1] / direction_vector[2]
+        slope = slope[0] # TODO: suceptible to errors
     except ZeroDivisionError:
         slope = float('inf')
 
@@ -46,7 +47,7 @@ def plot_line_from_vector(class0: np.ndarray, class1: np.ndarray, direction_vect
     plt.show()
 
 
-def plot_line_from_weights(class0: np.ndarray, class1: np.ndarray, weights: np.ndarray, title="Perceptron Learning Data"):
+def plot_line_from_weights(class0: np.ndarray, class1: np.ndarray, weights: np.ndarray, title="Generated Data"):
     """
     Plot a 2D line given a weight vector.
 
