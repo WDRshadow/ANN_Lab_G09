@@ -3,6 +3,7 @@ import unittest
 import numpy as np
 from GraphingUtils import plot_line_from_vector
 
+
 class PerceptronLearning:
     """
     Perceptron learning algorithm
@@ -14,12 +15,13 @@ class PerceptronLearning:
         study_rate: the study rate of the perceptron
     """
 
-    def __init__(self, input_num: int, output_num: int, threshold: float, study_rate: float):
-        self.w = np.zeros((input_num, output_num))
+    def __init__(self, input_num: int, output_num: int, threshold: float, study_rate: float = 0.1, epochs: int = 100):
+        self.w = np.zeros((input_num + 1, output_num))
         self.threshold = threshold
         self.study_rate = study_rate
         self.input_num = input_num
         self.output_num = output_num
+        self.epochs = epochs
 
     def _one_step(self, x: np.ndarray, y: np.ndarray):
         """
@@ -29,13 +31,7 @@ class PerceptronLearning:
         # print("y_pred", y_pred, "and y?", y)
         for i, y_unit in enumerate(y_pred):
             # print("y_unit", y_unit, "i:", i)
-            if y_unit != y[i]:
-                if y[i] == 1:
-                    self.w[:, i] += self.study_rate * x
-                elif y[i] == 0:
-                    self.w[:, i] -= self.study_rate * x
-                else:
-                    raise ValueError("The value of y should be 0 or 1.")
+            self.w[:, i] += self.study_rate * (y[i] - y_unit) * np.insert(x, 0, 1)
 
     def learning_loop(self, data: (np.ndarray, np.ndarray)):
         """
@@ -43,9 +39,10 @@ class PerceptronLearning:
         :param data: the training data
         """
         x, y = data
-        for i in range(len(x)):
-            # print("x[i] and y[i]", x[i], y[i])
-            self._one_step(x[i], y[i])
+        for e in range(self.epochs):
+            for i in range(len(x)):
+                # print("x[i] and y[i]", x[i], y[i])
+                self._one_step(x[i], y[i])
 
     def forward(self, x: np.ndarray) -> np.ndarray:
         """
@@ -53,12 +50,14 @@ class PerceptronLearning:
         :param x: the input data
         :return: the output data
         """
+        # Add bias term to input
+        x = np.insert(x, 0, 1)
         # print("checking forward", x, self.w, np.dot(x, self.w))
         return np.where(np.dot(x, self.w) > self.threshold, 1, 0)
 
 
 class DeltaRuleLearning:
-    def __init__(self, input_num, output_num, study_rate):
+    def __init__(self, input_num, output_num, study_rate=0.1, epochs=100):
         """
         Delta rule learning algorithm
 
@@ -71,6 +70,7 @@ class DeltaRuleLearning:
         self.study_rate = study_rate
         self.input_num = input_num
         self.output_num = output_num
+        self.epochs = epochs
 
     def _one_step(self, x: np.ndarray, y: np.ndarray):
         """
@@ -79,7 +79,7 @@ class DeltaRuleLearning:
         y_pred = self.forward(x)
         for i, y_unit in enumerate(y_pred):
             e = y[i] - y_unit
-            self.w[:, i] += self.study_rate * e * x
+            self.w[:, i] += self.study_rate * e * np.insert(x, 0, 1)
 
     def learning_loop(self, data: (np.ndarray, np.ndarray)):
         """
@@ -87,8 +87,9 @@ class DeltaRuleLearning:
         :param data: the training data
         """
         x, y = data
-        for i in range(len(x)):
-            self._one_step(x[i], y[i])
+        for e in range(self.epochs):
+            for i in range(len(x)):
+                self._one_step(x[i], y[i])
 
     def forward(self, x: np.ndarray) -> np.ndarray:
         """
@@ -96,6 +97,8 @@ class DeltaRuleLearning:
         :param x: the input data
         :return: the output data
         """
+        # Add bias term to input
+        x = np.insert(x, 0, 1)
         return np.dot(x, self.w)
 
 
@@ -107,7 +110,7 @@ class Test(unittest.TestCase):
         self.s_r = 0.1
         self.input_layer_len = 10
         self.output_layer_len = 1
-        
+
         self.data = self.generate_data()
         # print(self.data)
 
@@ -126,13 +129,13 @@ class Test(unittest.TestCase):
         mA = [1.0, -0.5]
         sigmaA = 0.5
         mB = [-1.0, 0]
-        sigmaB = 0.5 
+        sigmaB = 0.5
 
         self.class1 = self.generate_array(self.n, mA, sigmaA)
         self.class0 = self.generate_array(self.n, mB, sigmaB)
 
         # Determine different ways to stack the classes
-        data = np.stack([self.class1, self.class0]) 
+        data = np.stack([self.class1, self.class0])
 
         labels1 = np.full((self.n, 1), 1)
         labels0 = np.full((self.n, 1), 0)
@@ -158,8 +161,8 @@ class Test(unittest.TestCase):
 
         # Generate data for the class
         point_array = np.array([
-            np.random.randn(n) * sigma + mean[0],   # Feature 1 for the class
-            np.random.randn(n) * sigma + mean[1]    # Feature 2 for the class
+            np.random.randn(n) * sigma + mean[0],  # Feature 1 for the class
+            np.random.randn(n) * sigma + mean[1]  # Feature 2 for the class
         ])
 
         return point_array
@@ -167,7 +170,7 @@ class Test(unittest.TestCase):
     # def test_perceptron_learning(self):
     #     perceptron = PerceptronLearning(self.input_layer_len, self.output_layer_len, self.threshold, self.s_r)
     #     perceptron.learning_loop(self.data)
-        # self.plot_line_from_vector(perceptron.w, title="Perceptron Learning Data")
+    # self.plot_line_from_vector(perceptron.w, title="Perceptron Learning Data")
 
     # def test_delta_rule_learning(self):
     #     delta_rule = DeltaRuleLearning(self.input_layer_len, self.output_layer_len, self.s_r)
