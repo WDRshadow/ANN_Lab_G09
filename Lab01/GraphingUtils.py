@@ -52,7 +52,7 @@ def plot_line_from_weights(class0: np.ndarray, class1: np.ndarray, weights: np.n
     Plot a 2D line given a weight vector.
 
     Parameters:
-        weights (np.ndarray): The weight vector [w0, w1, w2] of the line. The line should be w0*x0 + w1*x1 + w2 = 0.
+        weights (np.ndarray): The weight vector [w0, w1, w2] of the line. The line should be w0 + w1*x + w2*y = 0.
     """
     fig, ax = plt.subplots()
 

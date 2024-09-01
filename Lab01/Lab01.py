@@ -1,6 +1,5 @@
 import unittest
 
-import numpy as np
 from GraphingUtils import plot_line_from_vector, plot_line_from_weights
 from PointRecognition import *
 
@@ -59,7 +58,7 @@ class PerceptronLearning:
         :return: the output data
         """
         # Add bias term to input
-        x = np.insert(x, 2, 0, axis=1)
+        x = np.insert(x, 0, 1, axis=1)
         # print("checking forward", x, self.w, np.dot(x, self.w))
         return np.where(np.dot(self.w.transpose(), x.transpose()) > self.threshold, 1, 0).transpose()
 
@@ -108,7 +107,7 @@ class DeltaRuleLearning:
         :return: the output data
         """
         # Add bias term to input
-        x = np.insert(x, 2, 0, axis=1)
+        x = np.insert(x, 0, 0, axis=1)
         return np.dot(self.w.transpose(), x.transpose()).transpose()
 
 
@@ -177,12 +176,12 @@ class Test(unittest.TestCase):
         return point_array
 
     def test_perceptron_learning(self):
-        perceptron = PerceptronLearning(self.input_layer_len, self.output_layer_len, self.threshold, self.s_r)
+        perceptron = PerceptronLearning(self.input_layer_len, self.output_layer_len, self.threshold, self.s_r, epochs=300)
         perceptron.learning_loop(self.data)
         plot_line_from_vector(self.class0, self.class1, perceptron.w, title="Perceptron Learning Data")
 
     def test_delta_rule_learning(self):
-        delta_rule = DeltaRuleLearning(self.input_layer_len, self.output_layer_len, self.s_r)
+        delta_rule = DeltaRuleLearning(self.input_layer_len, self.output_layer_len, self.s_r, epochs=300)
         delta_rule.learning_loop(self.data)
         plot_line_from_vector(self.class0, self.class1, delta_rule.w, title="Delta Rule Learning Data")
 
