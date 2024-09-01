@@ -2,6 +2,7 @@ import unittest
 
 import numpy as np
 from GraphingUtils import plot_line_from_vector
+from PointRecognition import *
 
 
 class PerceptronLearning:
@@ -128,7 +129,7 @@ class Test(unittest.TestCase):
 
         mA = [1.0, -0.5]
         sigmaA = 0.5
-        mB = [-1.0, 0]
+        mB = [-1.0, 0.5]
         sigmaB = 0.5
 
         self.class1 = self.generate_array(self.n, mA, sigmaA)
@@ -180,3 +181,14 @@ class Test(unittest.TestCase):
     def test_test(self):
         direction_vector = [1, 0]
         plot_line_from_vector(self.class0, self.class1, direction_vector)
+
+        point = (1, 1)
+        print(is_point_on_positive_side(direction_vector, point))  # Output: True (depends on dir vector)
+        print(is_point_on_propper_side(direction_vector, point, 1))  # Output: True (depends on dir vector)
+
+        point = (-1, -1)
+        print(is_point_on_positive_side(direction_vector, point))  # Output: False (depends on dir vector)
+        print(is_point_on_propper_side(direction_vector, point, -1))  # Output: True (depends on dir vector)
+
+        points, values = self.data
+        print(all_points_on_propper_side(direction_vector, points, values)) # Output: Depends on the point generation
