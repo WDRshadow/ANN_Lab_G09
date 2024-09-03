@@ -1,72 +1,14 @@
 import unittest
+from abc import ABC, abstractmethod
 
-from GraphingUtils import plot_line_from_vector, plot_line_from_weights
+from GraphingUtils import plot_line_from_vector
 from PointRecognition import *
 
 
-class PerceptronLearning:
-    """
-    Perceptron learning algorithm
-
-    Parameters:
-        input_num: the number of input units
-        output_num: the number of output units
-        threshold: the threshold of the perceptron
-        study_rate: the study rate of the perceptron
-        epochs: the number of epochs to train the perceptron
-    """
-
-    def __init__(self, input_num: int, output_num: int, threshold: float, study_rate: float = 0.1, epochs: int = 100):
-        self.w = np.ones((input_num + 1, output_num))
-        self.threshold = threshold
-        self.study_rate = study_rate
-        self.input_num = input_num
-        self.output_num = output_num
-        self.epochs = epochs
-
-    def _one_step(self, x: np.ndarray, y: np.ndarray):
+class LearningAlgorithm(ABC):
+    def __init__(self, input_num, output_num, study_rate=0.1, epochs=3000):
         """
-        One step of the perceptron learning algorithm
-        """
-        y_pred = self.forward(x)
-        for i, y_i in enumerate(y_pred):
-            for j, y_j in enumerate(y_i):
-                if (all_points_on_propper_side(self.w, x, y)): 
-                    return
-            
-                if (not is_point_on_propper_side(self.w, x[i], y[i, j])):
-                    self.w[:, j] += self.study_rate * (y[i, j] - y_j) * np.insert(x[i], 0, 1)
-        
-    def learning_loop(self, data: (np.ndarray, np.ndarray)):
-        """
-        The learning loop of the perceptron learning algorithm
-        :param data: the training data
-        """
-        x, y = data
-        for e in range(self.epochs):
-            if (all_points_on_propper_side(self.w, x, y)): 
-                print("all points are correct, n of epochs: ", e)
-                return
-
-            self._one_step(x, y)
-        raise RuntimeError("Values are not linearly separable in specified epochs.") 
-
-    def forward(self, x: np.ndarray) -> np.ndarray:
-        """
-        The forward pass of the perceptron
-        :param x: the input data
-        :return: the output data
-        """
-        # Add bias term to input
-        x = np.insert(x, 0, 1, axis=1)
-        # print("checking forward", x, self.w, np.dot(x, self.w))
-        return np.where(np.dot(self.w.transpose(), x.transpose()) > self.threshold, 1, 0).transpose()
-
-
-class DeltaRuleLearning:
-    def __init__(self, input_num, output_num, study_rate=0.1, epochs=100):
-        """
-        Delta rule learning algorithm
+        Basic learning algorithm
 
         Parameters:
             input_num: the number of input units
@@ -82,32 +24,69 @@ class DeltaRuleLearning:
 
     def _one_step(self, x: np.ndarray, y: np.ndarray):
         """
-        One step of the delta rule learning algorithm
+        One step of the learning algorithm
         """
-        y_pred = self.forward(x)
-        for i, y_i in enumerate(y_pred):
+        for i, y_i in enumerate(y):
+            y_pred = self(x)
             for j, y_j in enumerate(y_i):
-                e = y[i, j] - y_j
-                self.w[:, j] += self.study_rate * e * np.insert(x[i], 0, 1)
-        # TODO: check if the classification is correct
+                self.w[:, j] += self.study_rate * (y_j - y_pred[i, j]) * np.insert(x[i], 0, 1)
 
-    def learning_loop(self, data: (np.ndarray, np.ndarray)):
+    def train(self, data: (np.ndarray, np.ndarray)):
         """
-        The learning loop of the delta rule learning algorithm
+        The learning loop of the learning algorithm
         :param data: the training data
         """
         x, y = data
         for e in range(self.epochs):
-            self._one_step(x, y)
+            if all_points_on_propper_side(self.w, x, y):
+                print("all points are correct, n of epochs: ", e)
+                return
 
-    def forward(self, x: np.ndarray) -> np.ndarray:
+            self._one_step(x, y)
+        print("Values are not linearly separable in specified epochs.")
+
+    @abstractmethod
+    def __call__(self, x: np.ndarray) -> np.ndarray:
+        pass
+
+
+class PerceptronLearning(LearningAlgorithm):
+    """
+    Perceptron learning algorithm
+
+    Parameters:
+        input_num: the number of input units
+        output_num: the number of output units
+        threshold: the threshold of the perceptron
+        study_rate: the study rate of the perceptron
+        epochs: the number of epochs to train the perceptron
+    """
+
+    def __init__(self, input_num: int, output_num: int, threshold: float = 0, study_rate: float = 0.1,
+                 epochs: int = 3000):
+        super().__init__(input_num, output_num, study_rate, epochs)
+        self.threshold = threshold
+
+    def __call__(self, x: np.ndarray) -> np.ndarray:
         """
         The forward pass of the perceptron
         :param x: the input data
         :return: the output data
         """
         # Add bias term to input
-        x = np.insert(x, 0, 0, axis=1)
+        x = np.insert(x, 0, 1, axis=1)
+        return np.where(np.dot(self.w.transpose(), x.transpose()) > self.threshold, 1, 0).transpose()
+
+
+class DeltaRuleLearning(LearningAlgorithm):
+    def __call__(self, x: np.ndarray) -> np.ndarray:
+        """
+        The forward pass of the perceptron
+        :param x: the input data
+        :return: the output data
+        """
+        # Add bias term to input
+        x = np.insert(x, 0, 1, axis=1)
         return np.dot(self.w.transpose(), x.transpose()).transpose()
 
 
@@ -115,31 +94,28 @@ class Test(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(Test, self).__init__(*args, **kwargs)
         self.n = 10
-        self.threshold = 0
-        self.s_r = 0.1
         self.input_layer_len = 2
         self.output_layer_len = 1
 
+        self.mA = [-1.0, -0.5]
+        self.sigmaA = 0.5
+        self.mB = [1.0, 0.5]
+        self.sigmaB = 0.5
+
         self.data = self.generate_data()
-        # print(self.data)
+        self.randomly_mix_data()
 
     def generate_data(self):
         """
         Generate random data for two classes.
-        # TODO: modularize for delta rule
         
         Returns:
             data (np.ndarray): Data points for the classes, shape (2*n, 2). Example: [[1, 2], [3, 4], ...]
             labels (np.ndarray): Labels for the classes, shape (2*n, 1). Example: [[1], [0], ...]
         """
 
-        mA = [-1.0, -0.5]
-        sigmaA = 0.5
-        mB = [1.0, 0.5]
-        sigmaB = 0.5
-
-        self.class1 = self.generate_array(self.n, mA, sigmaA)
-        self.class0 = self.generate_array(self.n, mB, sigmaB)
+        self.class1 = self.generate_array(self.n, self.mA, self.sigmaA)
+        self.class0 = self.generate_array(self.n, self.mB, self.sigmaB)
 
         # Determine different ways to stack the classes
         data = np.vstack([self.class1, self.class0])
@@ -150,6 +126,24 @@ class Test(unittest.TestCase):
         labels = np.vstack((labels1, labels0))
 
         return data, labels
+
+    def randomly_mix_data(self):
+        """
+        Randomly mix the data points and their labels.
+
+        Returns:
+            data (np.ndarray): Data points for the classes, shape (2*n, 2). Example: [[1, 2], [3, 4], ...]
+            labels (np.ndarray): Labels for the classes, shape (2*n, 1). Example: [[1], [0], ...]
+        """
+        data = np.hstack([self.data[0], self.data[1]])
+
+        # Randomly mix the data points and their labels
+        np.random.shuffle(data)
+
+        # Split the data points and their labels
+        coords, labels = np.hsplit(data, [2])
+
+        self.data = coords, labels
 
     @staticmethod
     def generate_array(n, mean, sigma) -> np.ndarray:
@@ -176,26 +170,15 @@ class Test(unittest.TestCase):
         return point_array
 
     def test_perceptron_learning(self):
-        perceptron = PerceptronLearning(self.input_layer_len, self.output_layer_len, self.threshold, self.s_r, epochs=300)
-        perceptron.learning_loop(self.data)
+        perceptron = PerceptronLearning(self.input_layer_len, self.output_layer_len)
+        perceptron.train(self.data)
         plot_line_from_vector(self.class0, self.class1, perceptron.w, title="Perceptron Learning Data")
 
     def test_delta_rule_learning(self):
-        delta_rule = DeltaRuleLearning(self.input_layer_len, self.output_layer_len, self.s_r, epochs=300)
-        delta_rule.learning_loop(self.data)
+        delta_rule = DeltaRuleLearning(self.input_layer_len, self.output_layer_len)
+        delta_rule.train(self.data)
         plot_line_from_vector(self.class0, self.class1, delta_rule.w, title="Delta Rule Learning Data")
 
-    # def test_test(self):
-    #     direction_vector = [0, 1, 0]
-    #     plot_line_from_vector(self.class0, self.class1, direction_vector)
-
-    #     point = (1, 1)
-    #     print(is_point_on_positive_side(direction_vector, point))  # Output: True (depends on dir vector)
-    #     print(is_point_on_propper_side(direction_vector, point, 1))  # Output: True (depends on dir vector)
-
-    #     point = (-1, -1)
-    #     print(is_point_on_positive_side(direction_vector, point))  # Output: False (depends on dir vector)
-    #     print(is_point_on_propper_side(direction_vector, point, -1))  # Output: True (depends on dir vector)
-
-    #     points, values = self.data
-    #     print(all_points_on_propper_side(direction_vector, points, values)) # Output: Depends on the point generation
+    def test_all(self):
+        self.test_perceptron_learning()
+        self.test_delta_rule_learning()
