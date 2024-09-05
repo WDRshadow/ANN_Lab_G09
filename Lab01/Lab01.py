@@ -1,12 +1,12 @@
 import unittest
 from abc import ABC, abstractmethod
 
-from GraphingUtils import plot_line_from_vector
-from PointRecognition import *
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 class LearningAlgorithm(ABC):
-    def __init__(self, input_num, output_num, study_rate=0.1, epochs=3000):
+    def __init__(self, input_num, output_num, study_rate=0.001, epochs=1000):
         """
         Basic learning algorithm
 
@@ -26,13 +26,10 @@ class LearningAlgorithm(ABC):
         """
         One step of the learning algorithm
         """
-        # check if x and y has the same length
-        if len(x) != len(y):
-            raise ValueError("x and y must have the same length")
         for i, y_i in enumerate(y):
             y_pred = self(x[i])
             for j, y_j in enumerate(y_i):
-                self.w[1:, j] += self.study_rate * (y_j - y_pred[j]) * x[i]
+                self.w[:, j] += self.study_rate * (y_j - y_pred[j]) * np.insert(x[i], 0, 1)
 
     def train(self, data: (np.ndarray, np.ndarray)):
         """
@@ -40,6 +37,9 @@ class LearningAlgorithm(ABC):
         :param data: the training data
         """
         x, y = data
+        # check if x and y has the same length
+        if len(x) != len(y):
+            raise ValueError("x and y must have the same length")
         for e in range(self.epochs):
             if self._is_all_points_on_propper_side(data):
                 print("all points are correct, n of epochs: ", e)
@@ -61,6 +61,53 @@ class LearningAlgorithm(ABC):
     @abstractmethod
     def __call__(self, x: np.ndarray) -> np.ndarray:
         pass
+
+    def plot(self, class0: np.ndarray, class1: np.ndarray, title="Generated Data"):
+        """
+        Plot a 2D line given a direction vector and a point.
+
+        The line should be 0 = bias + a*x1 + b*x2.
+
+        Parameters:
+            class0 (np.ndarray): Data points for class 0, shape (n, 2).
+            class1 (np.ndarray): Data points for class 1, shape (n, 2).
+            title (str): Title of the plot.
+        """
+        fig, ax = plt.subplots()
+
+        y_0 = -self.w[0] / self.w[2]
+        point = np.array([0, y_0[0]])
+
+        # plot the normal vector to the decision line at the point
+        ax.quiver(*point, self.w[1], -self.w[2], color='C0', label='Normal Vector')
+
+        try:
+            slope = -self.w[1] / self.w[2]
+            slope = slope[0]
+        except ZeroDivisionError:
+            slope = float('inf')
+
+        ax.axline(xy1=point, slope=slope, color='C0', label='Decision Line')
+
+        def plot_config(ax, title="Generated Data"):
+            ax.set_xlim(-2, 2)
+            ax.set_ylim(-2, 2)
+            ax.set_xlabel('x1')
+            ax.set_ylabel('x2')
+            ax.set_title(title)
+            ax.legend()
+
+        def plot_data(ax, class0, class1):
+            """
+            Plot the generated data for class 1 and class 0.
+            """
+            ax.scatter(class1[0, :], class1[1, :], color='blue', label='Class 1')
+            ax.scatter(class0[0, :], class0[1, :], color='red', label='Class 0')
+
+        plot_data(ax, class0.transpose(), class1.transpose())
+        plot_config(ax, title)
+
+        plt.show()
 
 
 class PerceptronLearning(LearningAlgorithm):
@@ -166,12 +213,12 @@ class Test(unittest.TestCase):
     def test_perceptron_learning(self):
         perceptron = PerceptronLearning(self.input_layer_len, self.output_layer_len)
         perceptron.train(self.data)
-        plot_line_from_vector(self.class0, self.class1, perceptron.w, title="Perceptron Learning Data")
+        perceptron.plot(self.class0, self.class1, title="Perceptron Learning Data")
 
     def test_delta_rule_learning(self):
         delta_rule = DeltaRuleLearning(self.input_layer_len, self.output_layer_len)
         delta_rule.train(self.data)
-        plot_line_from_vector(self.class0, self.class1, delta_rule.w, title="Delta Rule Learning Data")
+        delta_rule.plot(self.class0, self.class1, title="Delta Rule Learning Data")
 
     def test_all(self):
         self.test_perceptron_learning()
