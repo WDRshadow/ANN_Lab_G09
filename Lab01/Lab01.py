@@ -234,10 +234,10 @@ class Test(unittest.TestCase):
         self.epochs = 200
 
         self.data_generator = DataGenerator(
-            n=10,
-            mA=[1.0, 0.5],
+            n=100,
+            mA=[0.0, 1.0],
             sigmaA = 0.5,
-            mB=[-1.0, -0.5],
+            mB=[-0.0, -1.0],
             sigmaB = 0.5
         )
 
