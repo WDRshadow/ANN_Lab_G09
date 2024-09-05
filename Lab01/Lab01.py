@@ -92,7 +92,7 @@ class LearningAlgorithm(ABC):
 
         labels = data[1].flatten()
         class1 = data[0][labels == 1]
-        class0 = data[0][labels == 0]
+        class0 = data[0][labels == -1]
 
         ax.scatter(class1.transpose()[0, :], class1.transpose()[1, :], color='blue', label='Class 1')
         ax.scatter(class0.transpose()[0, :], class0.transpose()[1, :], color='red', label='Class 0')
@@ -129,7 +129,7 @@ class PerceptronLearning(LearningAlgorithm):
             x = x.reshape(1, -1)
         # Add bias term to input
         x = np.insert(x, 0, 1, axis=1)
-        return np.where(np.dot(self.w.transpose(), x.transpose()) > self.threshold, 1, 0).transpose()
+        return np.where(np.dot(self.w.transpose(), x.transpose()) > self.threshold, 1, -1).transpose()
 
 
 class DeltaRuleLearning(LearningAlgorithm):
@@ -144,7 +144,7 @@ class DeltaRuleLearning(LearningAlgorithm):
             return False
         # x2 = (-bias - a*x1) / b
         x2 = (-self.w[0] - self.w[1] * x.transpose()[0]) / self.w[2]
-        y_pred = np.where(x.transpose()[1] < x2, 0, 1).reshape(-1, 1)
+        y_pred = np.where(x.transpose()[1] < x2, -1, 1).reshape(-1, 1)
         return np.array_equal(y, y_pred)
 
     def __call__(self, x: np.ndarray) -> np.ndarray:
@@ -206,7 +206,7 @@ class DataGenerator:
         data = np.vstack([class1, class0])
 
         labels1 = np.full((self.n, 1), 1)
-        labels0 = np.full((self.n, 1), 0)
+        labels0 = np.full((self.n, 1), -1)
 
         labels = np.vstack((labels1, labels0))
 
@@ -228,14 +228,14 @@ class DataGenerator:
 class Test(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(Test, self).__init__(*args, **kwargs)
-        self.study_rate = 0.01
-        self.epochs = 200
+        self.study_rate = 0.001
+        self.epochs = 3000
 
         self.data_generator = DataGenerator(
             n=100,
-            mA=[0.0, 1.0],
+            mA=[0.0, 2.0],
             sigmaA = 0.5,
-            mB=[-0.0, -1.0],
+            mB=[-0.0, -0.0],
             sigmaB = 0.5
         )
 
