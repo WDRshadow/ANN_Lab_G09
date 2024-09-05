@@ -26,10 +26,13 @@ class LearningAlgorithm(ABC):
         """
         One step of the learning algorithm
         """
+        # check if x and y has the same length
+        if len(x) != len(y):
+            raise ValueError("x and y must have the same length")
         for i, y_i in enumerate(y):
-            y_pred = self(x)
+            y_pred = self(x[i])
             for j, y_j in enumerate(y_i):
-                self.w[:, j] += self.study_rate * (y_j - y_pred[i, j]) * np.insert(x[i], 0, 1)
+                self.w[:, j] += self.study_rate * (y_j - y_pred[j]) * np.insert(x[i], 0, 1)
 
     def train(self, data: (np.ndarray, np.ndarray)):
         """
@@ -73,6 +76,9 @@ class PerceptronLearning(LearningAlgorithm):
         :param x: the input data
         :return: the output data
         """
+        # check if x is a 2 dimensional array
+        if len(x.shape) == 1:
+            x = x.reshape(1, -1)
         # Add bias term to input
         x = np.insert(x, 0, 1, axis=1)
         return np.where(np.dot(self.w.transpose(), x.transpose()) > self.threshold, 1, 0).transpose()
@@ -85,6 +91,9 @@ class DeltaRuleLearning(LearningAlgorithm):
         :param x: the input data
         :return: the output data
         """
+        # check if x is a 2 dimensional array
+        if len(x.shape) == 1:
+            x = x.reshape(1, -1)
         # Add bias term to input
         x = np.insert(x, 0, 1, axis=1)
         return np.dot(self.w.transpose(), x.transpose()).transpose()
