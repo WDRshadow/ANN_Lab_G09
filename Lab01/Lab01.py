@@ -166,8 +166,6 @@ class DataGenerator:
     Data generator for the perceptron learning algorithm
 
     Properties:
-        class1 (np.ndarray): the data points for class 1 \n
-        class0 (np.ndarray): the data points for class 0 \n
         data (np.ndarray): the data points and their labels
     """
     def __init__(self, n=100, mA=None, sigmaA = 0.5, mB=None, sigmaB = 0.5):
