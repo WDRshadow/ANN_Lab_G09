@@ -32,7 +32,7 @@ class LearningAlgorithm(ABC):
         for i, y_i in enumerate(y):
             y_pred = self(x[i])
             for j, y_j in enumerate(y_i):
-                self.w[:, j] += self.study_rate * (y_j - y_pred[j]) * np.insert(x[i], 0, 1)
+                self.w[1:, j] += self.study_rate * (y_j - y_pred[j]) * x[i]
 
     def train(self, data: (np.ndarray, np.ndarray)):
         """
@@ -41,12 +41,22 @@ class LearningAlgorithm(ABC):
         """
         x, y = data
         for e in range(self.epochs):
-            if all_points_on_propper_side(self.w, x, y):
+            if self._is_all_points_on_propper_side(data):
                 print("all points are correct, n of epochs: ", e)
                 return
 
             self._one_step(x, y)
         print("Values are not linearly separable in specified epochs.")
+
+    def _is_all_points_on_propper_side(self, data: (np.ndarray, np.ndarray)) -> bool:
+        """
+        Check if all points are on the propper side of the decision line
+        :param data: the training data
+        :return: True if all points are on the propper side of the decision line, False otherwise
+        """
+        x, y = data
+        y_pred = self(x)
+        return np.array_equal(y, y_pred)
 
     @abstractmethod
     def __call__(self, x: np.ndarray) -> np.ndarray:
@@ -115,13 +125,6 @@ class Test(unittest.TestCase):
         self.randomly_mix_data()
 
     def generate_data(self):
-        """
-        Generate random data for two classes.
-        
-        Returns:
-            data (np.ndarray): Data points for the classes, shape (2*n, 2). Example: [[1, 2], [3, 4], ...]
-            labels (np.ndarray): Labels for the classes, shape (2*n, 1). Example: [[1], [0], ...]
-        """
 
         self.class1 = self.generate_array(self.n, self.mA, self.sigmaA)
         self.class0 = self.generate_array(self.n, self.mB, self.sigmaB)
@@ -137,13 +140,6 @@ class Test(unittest.TestCase):
         return data, labels
 
     def randomly_mix_data(self):
-        """
-        Randomly mix the data points and their labels.
-
-        Returns:
-            data (np.ndarray): Data points for the classes, shape (2*n, 2). Example: [[1, 2], [3, 4], ...]
-            labels (np.ndarray): Labels for the classes, shape (2*n, 1). Example: [[1], [0], ...]
-        """
         data = np.hstack([self.data[0], self.data[1]])
 
         # Randomly mix the data points and their labels
@@ -156,17 +152,6 @@ class Test(unittest.TestCase):
 
     @staticmethod
     def generate_array(n, mean, sigma) -> np.ndarray:
-        """
-        Generate random data for a class.
-
-        Parameters:
-            n (int): Number of data points per class.
-            mean (list or array): Mean for the class (2D).
-            sigma (float): Standard deviation for the class.
-
-        Returns:
-            point_array (np.ndarray): Data points for the class, shape (2, n).
-        """
         # Convert means to NumPy arrays
         mean = np.array(mean)
 
