@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 
 import matplotlib.pyplot as plt
 import numpy as np
+from sympy import false
 
 
 class LearningAlgorithm(ABC):
@@ -246,7 +247,7 @@ class Test(unittest.TestCase):
         self.epochs = 3000
 
         self.data_generator = DataGenerator(
-            n=100,
+            n=10,
             mA=[0.0, 2.0],
             sigmaA = 0.5,
             mB=[-0.0, -0.0],
@@ -265,27 +266,34 @@ class Test(unittest.TestCase):
         delta_rule.plot(self.data_generator.data, title="Delta Rule Learning Data")
         delta_rule.plot_errors()
 
-    def test_all(self):
-        self.test_perceptron_learning()
-        self.test_delta_rule_learning()
+    def test_all(self, plot=True):
+        perceptron = PerceptronLearning(2, 1, study_rate=self.study_rate, epochs=self.epochs)
+        perceptron.train(self.data_generator.data)
+        delta_rule = DeltaRuleLearning(2, 1, study_rate=self.study_rate, epochs=self.epochs)
+        delta_rule.train(self.data_generator.data, learning_type="b")
+        if plot:
+            self.two_in_one_plot(perceptron, delta_rule)
+            self.error_two_in_one_plot(perceptron, delta_rule)
+        return perceptron, delta_rule
 
     def test_left_right_side(self):
         self.data_generator = DataGenerator(
-            n=100,
+            n=10,
             mA=[-1.0, 0.0],
             sigmaA = 0.5,
             mB=[1.0, 0.0],
             sigmaB = 0.5
         )
-        self.test_perceptron_learning()
-        self.test_delta_rule_learning()
+        self.test_all()
 
     def test_different_study_rate(self):
-        self.test_perceptron_learning()
-        self.test_delta_rule_learning()
+        perceptron, delta_rule = self.test_all(plot=false)
         self.study_rate = 0.1
-        self.test_perceptron_learning()
-        self.test_delta_rule_learning()
+        perceptron1, delta_rule1 = self.test_all(plot=false)
+        self.two_in_one_plot(perceptron, perceptron1)
+        self.error_two_in_one_plot(perceptron, perceptron1)
+        self.two_in_one_plot(delta_rule, delta_rule1)
+        self.error_two_in_one_plot(delta_rule, delta_rule1)
 
 
     def test_learning_type(self):
@@ -293,13 +301,67 @@ class Test(unittest.TestCase):
         time_0 = time.time()
         delta_rule = DeltaRuleLearning(2, 1, study_rate=self.study_rate, epochs=self.epochs)
         delta_rule.train(self.data_generator.data, learning_type="s")
-        delta_rule.plot(self.data_generator.data, title="Delta Rule Learning Data with learning type sequential")
-        delta_rule.plot_errors()
         print("Time for sequential: ", time.time() - time_0)
         time_0 = time.time()
-        delta_rule = DeltaRuleLearning(2, 1, study_rate=self.study_rate, epochs=self.epochs)
-        delta_rule.train(self.data_generator.data, learning_type="b")
-        delta_rule.plot(self.data_generator.data, title="Delta Rule Learning Data with learning type batch")
-        delta_rule.plot_errors()
+        delta_rule2 = DeltaRuleLearning(2, 1, study_rate=self.study_rate, epochs=self.epochs)
+        delta_rule2.train(self.data_generator.data, learning_type="b")
         print("Time for batch: ", time.time() - time_0)
+        self.two_in_one_plot(delta_rule, delta_rule2)
+        self.error_two_in_one_plot(delta_rule, delta_rule2)
 
+    def two_in_one_plot(self, model1: LearningAlgorithm, model2: LearningAlgorithm):
+        fig, ax = plt.subplots()
+
+        y_0 = -model1.w[0] / model1.w[2]
+        point = np.array([0, y_0[0]])
+
+        # plot the normal vector to the decision line at the point
+        ax.quiver(*point, model1.w[1], -model1.w[2], color='C0')
+
+        try:
+            slope = -model1.w[1] / model1.w[2]
+            slope = slope[0]
+        except ZeroDivisionError:
+            slope = float('inf')
+
+        ax.axline(xy1=point, slope=slope, color='C0', label='Decision Line' + model1.__class__.__name__)
+
+        y_0 = -model2.w[0] / model2.w[2]
+        point = np.array([0, y_0[0]])
+
+        # plot the normal vector to the decision line at the point
+        ax.quiver(*point, model2.w[1], -model2.w[2], color='C1')
+
+        try:
+            slope = -model2.w[1] / model2.w[2]
+            slope = slope[0]
+        except ZeroDivisionError:
+            slope = float('inf')
+
+        ax.axline(xy1=point, slope=slope, color='C1', label='Decision Line' + model2.__class__.__name__)
+
+        labels = self.data_generator.data[1].flatten()
+        class1 = self.data_generator.data[0][labels == 1]
+        class0 = self.data_generator.data[0][labels == -1]
+
+        ax.scatter(class1.transpose()[0, :], class1.transpose()[1, :], color='blue', label='Class 1')
+        ax.scatter(class0.transpose()[0, :], class0.transpose()[1, :], color='red', label='Class 0')
+
+        ax.set_xlim(-2, 2)
+        ax.set_ylim(-2, 2)
+        ax.set_xlabel('x1')
+        ax.set_ylabel('x2')
+        ax.set_title("Generated Data")
+        ax.legend()
+
+        plt.show()
+
+    @staticmethod
+    def error_two_in_one_plot(model1: LearningAlgorithm, model2: LearningAlgorithm):
+        plt.plot(model1.errors, color='C0', label=model1.__class__.__name__)
+        plt.plot(model2.errors, color='C1', label=model2.__class__.__name__)
+        plt.xlabel("Epochs")
+        plt.ylabel("Error")
+        plt.title("Error over epochs")
+        plt.legend()
+        plt.show()
