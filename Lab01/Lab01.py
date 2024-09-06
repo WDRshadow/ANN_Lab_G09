@@ -1,3 +1,4 @@
+import time
 import unittest
 from abc import ABC, abstractmethod
 
@@ -23,6 +24,8 @@ class LearningAlgorithm(ABC):
         self.output_num = output_num
         self.epochs = epochs
 
+        self.errors = []
+
     def _one_step(self, x: np.ndarray, y: np.ndarray, learning_type="s"):
         """
         One step of the learning algorithm
@@ -38,6 +41,7 @@ class LearningAlgorithm(ABC):
             for j in range(self.output_num):
                 x_bias = np.insert(x, 0, 1, axis=1)
                 self.w[:, j] += self.study_rate * np.sum((y[:, j] - y_pred[:, j]) * x_bias.transpose(), axis=1)
+        self.errors.append(np.sum((y - self(x)) ** 2) / 2)
 
     def train(self, data: (np.ndarray, np.ndarray), learning_type="s"):
         """
@@ -104,6 +108,16 @@ class LearningAlgorithm(ABC):
         ax.set_title(title)
         ax.legend()
 
+        plt.show()
+
+    def plot_errors(self):
+        """
+        Plot the errors over the epochs
+        """
+        plt.plot(self.errors)
+        plt.xlabel("Epochs")
+        plt.ylabel("Error")
+        plt.title("Error over epochs")
         plt.show()
 
 
@@ -243,12 +257,49 @@ class Test(unittest.TestCase):
         perceptron = PerceptronLearning(2, 1, study_rate=self.study_rate, epochs=self.epochs)
         perceptron.train(self.data_generator.data)
         perceptron.plot(self.data_generator.data, title="Perceptron Learning Data")
+        perceptron.plot_errors()
 
     def test_delta_rule_learning(self):
         delta_rule = DeltaRuleLearning(2, 1, study_rate=self.study_rate, epochs=self.epochs)
         delta_rule.train(self.data_generator.data, learning_type="b")
         delta_rule.plot(self.data_generator.data, title="Delta Rule Learning Data")
+        delta_rule.plot_errors()
 
     def test_all(self):
         self.test_perceptron_learning()
         self.test_delta_rule_learning()
+
+    def test_left_right_side(self):
+        self.data_generator = DataGenerator(
+            n=100,
+            mA=[-1.0, 0.0],
+            sigmaA = 0.5,
+            mB=[1.0, 0.0],
+            sigmaB = 0.5
+        )
+        self.test_perceptron_learning()
+        self.test_delta_rule_learning()
+
+    def test_different_study_rate(self):
+        self.test_perceptron_learning()
+        self.test_delta_rule_learning()
+        self.study_rate = 0.1
+        self.test_perceptron_learning()
+        self.test_delta_rule_learning()
+
+
+    def test_learning_type(self):
+        # calculate systemds time
+        time_0 = time.time()
+        delta_rule = DeltaRuleLearning(2, 1, study_rate=self.study_rate, epochs=self.epochs)
+        delta_rule.train(self.data_generator.data, learning_type="s")
+        delta_rule.plot(self.data_generator.data, title="Delta Rule Learning Data with learning type sequential")
+        delta_rule.plot_errors()
+        print("Time for sequential: ", time.time() - time_0)
+        time_0 = time.time()
+        delta_rule = DeltaRuleLearning(2, 1, study_rate=self.study_rate, epochs=self.epochs)
+        delta_rule.train(self.data_generator.data, learning_type="b")
+        delta_rule.plot(self.data_generator.data, title="Delta Rule Learning Data with learning type batch")
+        delta_rule.plot_errors()
+        print("Time for batch: ", time.time() - time_0)
+
