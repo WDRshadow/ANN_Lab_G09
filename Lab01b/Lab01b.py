@@ -1,29 +1,31 @@
 import unittest
 
 from DataGenerator import DataGenerator
-from Module import Module, Layer, Sigmoid
+from Module import Module, Layer, Sigmoid, ReLU
 
 
 class MLP(Module):
     def __init__(self, input_dim: int, output_dim: int, study_rate=0.001, epochs=3000):
         super().__init__(study_rate, epochs)
-        self.layer1 = Layer(input_dim, 3, Sigmoid)
-        self.layer2 = Layer(3, output_dim, Sigmoid)
+        self.layer1 = Layer(input_dim, 5, ReLU)
+        self.layer2 = Layer(5, 5, ReLU)
+        self.layer3 = Layer(5, output_dim, Sigmoid)
         self.layers.append(self.layer1)
         self.layers.append(self.layer2)
+        self.layers.append(self.layer3)
 
 
 class Test(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(Test, self).__init__(*args, **kwargs)
         self.study_rate = 0.001
-        self.epochs = 3000
+        self.epochs = 50000
 
         self.data_generator = DataGenerator(
             n=100,
             mA=[1.0, 0.3],
             sigmaA=0.2,
-            mB=[-0.0, -0.1],
+            mB=[-1.0, -0.1],
             sigmaB=0.3
         )
 

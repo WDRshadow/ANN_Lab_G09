@@ -61,6 +61,15 @@ class Sigmoid(ActivationFunction):
         phi = Sigmoid.forward(x)
         return 0.5 * (1 + phi) * (1 - phi)
 
+class ReLU(ActivationFunction):
+    @staticmethod
+    def forward(x):
+        return np.maximum(0, x)
+
+    @staticmethod
+    def derivative(x):
+        return np.where(x > 0, 1, 0)
+
 
 class Layer:
     def __init__(self, input_dim: int, output_dim: int, activation_function: type[ActivationFunction], study_rate=0.001):
