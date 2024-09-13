@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sympy import false
 
+from DataGenerator import DataGenerator
+
 
 class LearningAlgorithm(ABC):
     def __init__(self, input_num, output_num, study_rate=0.01, epochs=1000, threshold=0.0):
@@ -102,8 +104,8 @@ class LearningAlgorithm(ABC):
         ax.scatter(class1.transpose()[0, :], class1.transpose()[1, :], color='blue', label='Class 1')
         ax.scatter(class0.transpose()[0, :], class0.transpose()[1, :], color='red', label='Class 0')
 
-        ax.set_xlim(-2, 2)
-        ax.set_ylim(-2, 2)
+        ax.set_xlim(-2, 3)
+        ax.set_ylim(-2, 3)
         ax.set_xlabel('x1')
         ax.set_ylabel('x2')
         ax.set_title(title)
@@ -176,70 +178,6 @@ class DeltaRuleLearning(LearningAlgorithm):
         return np.dot(self.w.transpose(), x.transpose()).transpose()
 
 
-class DataGenerator:
-    """
-    Data generator for the perceptron learning algorithm
-
-    Properties:
-        data (np.ndarray): the data points and their labels
-    """
-    def __init__(self, n=100, mA=None, sigmaA = 0.5, mB=None, sigmaB = 0.5):
-        self.n = n
-
-        if mA is None:
-            mA = [1.0, 0.5]
-        if mB is None:
-            mB = [-1.0, -0.5]
-        self.mA = mA
-        self.sigmaA = sigmaA
-        self.mB = mB
-        self.sigmaB = sigmaB
-
-        self.data = self._generate_data()
-        self._randomly_mix_data()
-
-
-    @staticmethod
-    def _generate_array(n, mean, sigma) -> np.ndarray:
-        # Convert means to NumPy arrays
-        mean = np.array(mean)
-
-        # Generate data for the class
-        point_array = np.array([
-            np.random.randn(n) * sigma + mean[0],  # Feature 1 for the class
-            np.random.randn(n) * sigma + mean[1]  # Feature 2 for the class
-        ]).transpose()
-
-        return point_array
-
-    def _generate_data(self):
-
-        class1 = self._generate_array(self.n, self.mA, self.sigmaA)
-        class0 = self._generate_array(self.n, self.mB, self.sigmaB)
-
-        # Determine different ways to stack the classes
-        data = np.vstack([class1, class0])
-
-        labels1 = np.full((self.n, 1), 1)
-        labels0 = np.full((self.n, 1), -1)
-
-        labels = np.vstack((labels1, labels0))
-
-        return data, labels
-
-    def _randomly_mix_data(self):
-        data = np.hstack([self.data[0], self.data[1]])
-
-        # Randomly mix the data points and their labels
-        np.random.shuffle(data)
-
-        # Split the data points and their labels
-        coords, labels = np.hsplit(data, [2])
-
-        self.data = coords, labels
-
-
-
 class Test(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(Test, self).__init__(*args, **kwargs)
@@ -247,11 +185,11 @@ class Test(unittest.TestCase):
         self.epochs = 3000
 
         self.data_generator = DataGenerator(
-            n=10,
+            n=100,
             mA=[0.0, 2.0],
-            sigmaA = 0.5,
+            sigmaA = 0.3,
             mB=[-0.0, -0.0],
-            sigmaB = 0.5
+            sigmaB = 0.3
         )
 
     def test_perceptron_learning(self):
@@ -347,8 +285,8 @@ class Test(unittest.TestCase):
         ax.scatter(class1.transpose()[0, :], class1.transpose()[1, :], color='blue', label='Class 1')
         ax.scatter(class0.transpose()[0, :], class0.transpose()[1, :], color='red', label='Class 0')
 
-        ax.set_xlim(-2, 2)
-        ax.set_ylim(-2, 2)
+        ax.set_xlim(-2, 5)
+        ax.set_ylim(-2, 5)
         ax.set_xlabel('x1')
         ax.set_ylabel('x2')
         ax.set_title("Generated Data")
