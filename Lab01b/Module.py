@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class Module():
+class Module:
     def __init__(self, study_rate: float, epochs: int):
         self.study_rate = study_rate
         self.epochs = epochs
