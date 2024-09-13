@@ -40,12 +40,24 @@ class Test(unittest.TestCase):
         mlp = MLP(2, 1, self.study_rate, self.epochs)
         X, Y = self.data_generator.data
         # 20% of the data is used for testing
-        mlp.train(X[:-100], Y[:-100], msg=True)
+        losses = mlp.train(X[:-100], Y[:-100], msg=True)
         # test the model and print the accuracy
         mlp.test(X[-100:], Y[-100:])
 
         # plot the model
         self.plot(mlp)
+
+        # plot the loss
+        self.plot_loss(losses)
+
+
+    @staticmethod
+    def plot_loss(losses):
+        plt.plot(losses)
+        plt.xlabel('Epoch')
+        plt.ylabel('Loss')
+        plt.title('Loss over Epochs')
+        plt.show()
 
 
     def plot(self, model: Module):

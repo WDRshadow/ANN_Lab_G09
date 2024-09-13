@@ -32,12 +32,15 @@ class Module:
             dO = np.dot(layer.W, delta.T)[1:].T
 
     def train(self, X: np.ndarray, Y: np.ndarray, msg=False):
+        losses = []
         for epoch in range(self.epochs):
             O = self.forward(X)
             loss = np.mean((O - Y) ** 2)
             self.backward(X, Y)
             if epoch % 100 == 0 and msg:
                 print(f"Epoch {epoch}, Loss: {loss}")
+            losses.append(loss)
+        return losses
 
     def test(self, X: np.ndarray, Y: np.ndarray):
         O = self.forward(X)
