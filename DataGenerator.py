@@ -114,3 +114,25 @@ class DataGenerator2(DataGenerator):
         labels = np.vstack((labels1, labels0, labels1_2))
 
         return data, labels
+
+
+class MackeyGlass:
+    def __init__(self, n=1506, beta=0.2, gamma=0.1, tau=25):
+        self.n = n
+        self.beta = beta
+        self.gamma = gamma
+        self.tau = tau
+
+    def generate_mackey_glass(self):
+        x = np.zeros(self.n)
+        x[0] = 1.5
+        for i in range(1, self.n):
+            x[i] = x[i - 1] + (self.beta * x[i - 1 - self.tau]) / (1 + x[i - 1 - self.tau] ** 10) - self.gamma * x[i - 1]
+        return x
+
+    def generate_data(self):
+        X = self.generate_mackey_glass()
+        t = np.arange(301, 1500 + 1)
+        inputs = [X[i - 20: i: 5] for i in t]
+        outputs = [X[i + 5] for i in t]
+        return np.array(inputs), np.array(outputs)
