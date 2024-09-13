@@ -36,8 +36,13 @@ class Module:
             O = self.forward(X)
             loss = np.mean((O - Y) ** 2)
             self.backward(X, Y)
-            if epoch % 100 == 0 & msg:
+            if epoch % 100 == 0 and msg:
                 print(f"Epoch {epoch}, Loss: {loss}")
+
+    def test(self, X: np.ndarray, Y: np.ndarray):
+        O = self.forward(X)
+        accuracy = 1 - np.mean(np.abs(O - Y))
+        print(f"Accuracy: {accuracy}")
 
 
 class ActivationFunction:

@@ -89,11 +89,11 @@ class DataGenerator:
 
 class DataGenerator2(DataGenerator):
     def __init__(self, n=100, mA=None, sigmaA = 0.5, mB=None, sigmaB = 0.5, mA2=None, sigmaA2 = 0.5):
-        super().__init__(n, mA, sigmaA, mB, sigmaB)
         if mA2 is None:
             mA2 = [-1.0, 0.0]
         self.mA2 = mA2
         self.sigmaA2 = sigmaA2
+        super().__init__(n, mA, sigmaA, mB, sigmaB)
 
         self.data = self._generate_data()
         self._randomly_mix_data()
