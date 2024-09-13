@@ -1,3 +1,5 @@
+import unittest
+
 import torch
 from torch import nn, optim
 
@@ -21,6 +23,7 @@ class MLP(nn.Module):
         x = self.Sigmoid(self.fc4(x))
         return x
 
+
 def train(model: nn.Module, train_X, train_Y, val_X, val_Y, epochs=3000, study_rate=0.001, regularization=None):
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=study_rate, weight_decay=regularization if regularization else 0.0)
@@ -42,6 +45,7 @@ def train(model: nn.Module, train_X, train_Y, val_X, val_Y, epochs=3000, study_r
         if epoch % 100 == 0:
             print(f'Epoch {epoch}, Training Loss: {loss.item()}, Validation Loss: {val_loss.item()}')
 
+
 def test_model(model, test_X):
     model.eval()
     with torch.no_grad():
@@ -49,15 +53,18 @@ def test_model(model, test_X):
     return predictions
 
 
-if __name__ == '__main__':
-    X, Y = MackeyGlass().generate_data()
-    # average device the data into training, validation and testing
-    X_train = X[:400]
-    Y_train = Y[:400]
-    X_val = X[401:800]
-    Y_val = Y[401:800]
-    X_test = X[800:]
-    Y_test = Y[800:]
-    mlp = MLP()
-    train(mlp, torch.tensor(X_train).float(), torch.tensor(Y_train).float(), torch.tensor(X_val).float(), torch.tensor(Y_val).float(), regularization=0.001)
-    predictions = test_model(mlp, torch.tensor(X_test).float())
+class Test(unittest.TestCase):
+    def test(self):
+        X, Y = MackeyGlass().generate_data()
+        # average device the data into training, validation and testing
+        X_train = X[:400]
+        Y_train = Y[:400]
+        X_val = X[401:800]
+        Y_val = Y[401:800]
+        X_test = X[800:]
+        Y_test = Y[800:]
+        mlp = MLP()
+        train(mlp, torch.tensor(X_train).float(), torch.tensor(Y_train).float(), torch.tensor(X_val).float(),
+              torch.tensor(Y_val).float(), regularization=0.001)
+        predictions = test_model(mlp, torch.tensor(X_test).float())
+        print(predictions)

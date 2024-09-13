@@ -1,8 +1,11 @@
 import unittest
 
 import numpy as np
+import torch
 from matplotlib import pyplot as plt
+from torch import nn
 
+import part2
 from DataGenerator import DataGenerator2
 from Module import Module, Layer, Sigmoid, ReLU
 
@@ -18,6 +21,24 @@ class MLP(Module):
         self.layers.append(self.layer2)
         self.layers.append(self.layer3)
         self.layers.append(self.layer4)
+
+
+class MLP2(nn.Module):
+    def __init__(self):
+        super(MLP2, self).__init__()
+        self.fc1 = nn.Linear(2, 10)
+        self.fc2 = nn.Linear(10, 10)
+        self.fc3 = nn.Linear(10, 5)
+        self.fc4 = nn.Linear(5, 1)
+        self.Sigmoid = nn.Sigmoid()
+        self.ReLU = nn.ReLU()
+
+    def forward(self, x):
+        x = self.ReLU(self.fc1(x))
+        x = self.ReLU(self.fc2(x))
+        x = self.Sigmoid(self.fc3(x))
+        x = self.Sigmoid(self.fc4(x))
+        return x
 
 
 class Test(unittest.TestCase):
@@ -50,6 +71,21 @@ class Test(unittest.TestCase):
         # plot the loss
         self.plot_loss(losses)
 
+    def test_third_lib(self):
+        X, Y = self.data_generator.data
+        X_train = torch.tensor(X[:-100]).float()
+        Y_train = torch.tensor(Y[:-100]).float()
+        X_val = torch.tensor(X[-100:]).float()
+        Y_val = torch.tensor(Y[-100:]).float()
+        mlp = MLP2()
+        part2.train(mlp, X_train, Y_train, X_val, Y_val, study_rate=self.study_rate, epochs=self.epochs)
+        predictions = part2.test_model(mlp, X_val)
+        accuracy = 1 - np.mean(np.abs(predictions - Y_val.numpy()))
+        print(f'Accuracy: {accuracy}')
+
+        # plot the model
+        self.plot(mlp)
+
 
     @staticmethod
     def plot_loss(losses):
@@ -60,7 +96,7 @@ class Test(unittest.TestCase):
         plt.show()
 
 
-    def plot(self, model: Module):
+    def plot(self, model):
         # generate a grid of points and filter them through the model to get the decision boundary whether the point
         # is in class A or B
         x = np.linspace(-2, 3, 100)
@@ -69,7 +105,10 @@ class Test(unittest.TestCase):
         Z = np.zeros(X.shape)
         for i in range(X.shape[0]):
             for j in range(X.shape[1]):
-                Z[i, j] = model.forward(np.array([[X[i, j], Y[i, j]]]))
+                if model.__class__.__name__ == 'MLP':
+                    Z[i, j] = model(np.array([[X[i, j], Y[i, j]]]))
+                elif model.__class__.__name__ == 'MLP2':
+                    Z[i, j] = model(torch.tensor([[X[i, j], Y[i, j]]]).float()).item()
 
         # plot the decision boundary
         plt.contourf(X, Y, Z, levels=1, colors=['blue', 'red'], alpha=0.5)
