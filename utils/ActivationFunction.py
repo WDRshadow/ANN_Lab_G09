@@ -4,11 +4,11 @@ import numpy as np
 class ActivationFunction:
     @staticmethod
     def forward(x: np.ndarray) -> np.ndarray:
-        pass
+        return x
 
     @staticmethod
     def derivative(x: np.ndarray) -> np.ndarray:
-        pass
+        return np.ones(x.shape)
 
 
 class Sigmoid(ActivationFunction):

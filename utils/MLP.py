@@ -53,8 +53,10 @@ class Module:
 
 
 class Layer:
-    def __init__(self, input_dim: int, output_dim: int, activation_function: type[ActivationFunction],
+    def __init__(self, input_dim: int, output_dim: int, activation_function: type[ActivationFunction] = None,
                  study_rate=0.001):
+        if activation_function is None:
+            activation_function = ActivationFunction
         self.W = np.random.randn(input_dim + 1, output_dim) * 0.01
         self.activation_function = activation_function
         self.study_rate = study_rate
