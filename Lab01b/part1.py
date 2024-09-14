@@ -7,7 +7,8 @@ from torch import nn
 
 import part2
 from DataGenerator import DataGenerator2
-from Module import Module, Layer, Sigmoid, ReLU
+from utils import ReLU, Tanh
+from utils import Module, Layer
 
 
 class MLP(Module):
@@ -15,8 +16,8 @@ class MLP(Module):
         super().__init__(study_rate, epochs)
         self.layer1 = Layer(input_dim, 10, ReLU)
         self.layer2 = Layer(10, 10, ReLU)
-        self.layer3 = Layer(10, 5, Sigmoid)
-        self.layer4 = Layer(5, output_dim, Sigmoid)
+        self.layer3 = Layer(10, 5, Tanh)
+        self.layer4 = Layer(5, output_dim, Tanh)
         self.layers.append(self.layer1)
         self.layers.append(self.layer2)
         self.layers.append(self.layer3)
@@ -41,6 +42,47 @@ class MLP2(nn.Module):
         return x
 
 
+def plot_loss(losses):
+    plt.plot(losses)
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title('Loss over Epochs')
+    plt.show()
+
+
+def plot(data_generator: DataGenerator2, model):
+    # generate a grid of points and filter them through the model to get the decision boundary whether the point
+    # is in class A or B
+    x = np.linspace(-2, 3, 100)
+    y = np.linspace(-2, 3, 100)
+    X, Y = np.meshgrid(x, y)
+    Z = np.zeros(X.shape)
+    for i in range(X.shape[0]):
+        for j in range(X.shape[1]):
+            if model.__class__.__name__ == 'MLP':
+                Z[i, j] = model(np.array([[X[i, j], Y[i, j]]]))
+            elif model.__class__.__name__ == 'MLP2':
+                Z[i, j] = model(torch.tensor([[X[i, j], Y[i, j]]]).float()).item()
+
+    # plot the decision boundary
+    plt.contourf(X, Y, Z, levels=1, colors=['blue', 'red'], alpha=0.5)
+
+    labels = data_generator.data[1].flatten()
+    classA = data_generator.data[0][labels == 1]
+    classB = data_generator.data[0][labels == -1]
+
+    plt.scatter(classA.transpose()[0, :], classA.transpose()[1, :], color='red', label='Class A')
+    plt.scatter(classB.transpose()[0, :], classB.transpose()[1, :], color='blue', label='Class B')
+
+    plt.xlim(-2, 3)
+    plt.ylim(-2, 3)
+    plt.xlabel('x1')
+    plt.ylabel('x2')
+    plt.title("Decision Boundary")
+    plt.legend()
+    plt.show()
+
+
 class Test(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(Test, self).__init__(*args, **kwargs)
@@ -57,10 +99,6 @@ class Test(unittest.TestCase):
             sigmaA2=0.2
         )
 
-    def test_all(self):
-        self.test()
-        self.test_pytorch()
-
     def test(self):
         X, Y = self.data_generator.data
         mlp = MLP(2, 1, self.study_rate, self.epochs)
@@ -70,10 +108,8 @@ class Test(unittest.TestCase):
         mlp.test(X[-100:], Y[-100:])
 
         # plot the model
-        self.plot(mlp)
-
-        # plot the loss
-        self.plot_loss(losses)
+        plot(self.data_generator, mlp)
+        plot_loss(losses)
 
     def test_pytorch(self):
         X, Y = self.data_generator.data
@@ -82,58 +118,15 @@ class Test(unittest.TestCase):
         X_val = X[-100:]
         Y_val = Y[-100:].T[0]
         mlp = MLP2(2, 1)
-        losses = part2.train(mlp, torch.tensor(X_train).float(), torch.tensor(Y_train).float(), torch.tensor(X_val).float(),
-              torch.tensor(Y_val).float(), study_rate=self.study_rate, epochs=self.epochs)
+        losses = part2.train(mlp, torch.tensor(X_train).float(), torch.tensor(Y_train).float(),
+                             torch.tensor(X_val).float(),
+                             torch.tensor(Y_val).float(), study_rate=self.study_rate, epochs=self.epochs)
         part2.test_model(mlp, torch.tensor(X_val).float(), torch.tensor(Y_val).float())
 
         # plot the model
-        self.plot(mlp)
+        plot(self.data_generator, mlp)
+        plot_loss(losses)
 
-        # plot the loss
-        self.plot_loss(losses)
-
-
-    @staticmethod
-    def plot_loss(losses):
-        plt.plot(losses)
-        plt.xlabel('Epoch')
-        plt.ylabel('Loss')
-        plt.title('Loss over Epochs')
-        plt.show()
-
-
-    def plot(self, model):
-        # generate a grid of points and filter them through the model to get the decision boundary whether the point
-        # is in class A or B
-        x = np.linspace(-2, 3, 100)
-        y = np.linspace(-2, 3, 100)
-        X, Y = np.meshgrid(x, y)
-        Z = np.zeros(X.shape)
-        for i in range(X.shape[0]):
-            for j in range(X.shape[1]):
-                if model.__class__.__name__ == 'MLP':
-                    Z[i, j] = model(np.array([[X[i, j], Y[i, j]]]))
-                elif model.__class__.__name__ == 'MLP2':
-                    Z[i, j] = model(torch.tensor([[X[i, j], Y[i, j]]]).float()).item()
-
-        # plot the decision boundary
-        plt.contourf(X, Y, Z, levels=1, colors=['blue', 'red'], alpha=0.5)
-
-        labels = self.data_generator.data[1].flatten()
-        classA = self.data_generator.data[0][labels == 1]
-        classB = self.data_generator.data[0][labels == -1]
-
-        plt.scatter(classA.transpose()[0, :], classA.transpose()[1, :], color='red', label='Class A')
-        plt.scatter(classB.transpose()[0, :], classB.transpose()[1, :], color='blue', label='Class B')
-
-        plt.xlim(-2, 3)
-        plt.ylim(-2, 3)
-        plt.xlabel('x1')
-        plt.ylabel('x2')
-        plt.title("Decision Boundary")
-        plt.legend()
-        plt.show()
-
-
-
-
+    def test_all(self):
+        self.test()
+        self.test_pytorch()
