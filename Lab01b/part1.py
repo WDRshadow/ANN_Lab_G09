@@ -16,6 +16,13 @@ class MLP(Module):
         self.layers.append(Layer(hidden_dim, output_dim, Tanh))
 
 
+class Encoder(Module):
+    def __init__(self, study_rate=0.001, epochs=3000):
+        super().__init__(study_rate, epochs)
+        self.layers.append(Layer(8, 3, Tanh))
+        self.layers.append(Layer(3, 8, Tanh))
+
+
 class MLP2(nn.Module):
     def __init__(self, input_dim: int, output_dim: int, hidden_dim: int = 5):
         super(MLP2, self).__init__()
@@ -162,3 +169,20 @@ class Test(unittest.TestCase):
         pred = mlp(self.data_generator.data_copy[0])
         self.data_generator.Z = pred.reshape(self.data_generator.Z.shape)
         self.data_generator.plot()
+
+    def test_encoder(self):
+        # randomly generate data with 1 dimension in range 0-7 with type int
+        X = np.random.randint(0, 7, (300, 1))
+        X_val = np.random.randint(0, 7, (30, 1))
+
+        def one_hot_encode(x):
+            y = np.zeros((x.size, 8)) - 1
+            y[np.arange(x.size), x.flatten()] = 1
+            return y
+
+        X = one_hot_encode(X)
+        X_val = one_hot_encode(X_val)
+        encoder = Encoder(study_rate=0.001, epochs=3000)
+        losses = encoder.train(X, X, True)
+        encoder.test(X_val, X_val)
+        plot_loss(losses, ' - Encoder')
