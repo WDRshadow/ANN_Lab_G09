@@ -4,6 +4,29 @@ from .ActivationFunction import ActivationFunction
 
 
 class Module:
+    """
+    A simple implementation of a Multi-Layer Perceptron (MLP) using numpy.
+
+    Examples
+    --------
+    >>> X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+    >>> Y = np.array([[0], [1], [1], [0]])
+    >>> model = Module(0.01, 1000)
+    >>> model.layers.append(Layer(2, 5))
+    >>> model.layers.append(Layer(5, 1))
+    >>> model.train(X, Y)
+    >>> model.test(X, Y)
+    Accuracy: 0.5
+
+    Parameters
+    ----------
+    study_rate : float
+        The learning rate of the model.
+    epochs : int
+        The number of epochs to train the model.
+
+    """
+
     def __init__(self, study_rate: float, epochs: int):
         self.study_rate = study_rate
         self.epochs = epochs
@@ -53,9 +76,32 @@ class Module:
 
 
 class Layer:
-    def __init__(self, input_dim: int, output_dim: int, activation_function: type[ActivationFunction] = None):
-        if activation_function is None:
-            activation_function = ActivationFunction
+    """
+    A simple implementation of a layer in a Multi-Layer Perceptron (MLP) using numpy.
+    Layer is a linear transformation followed by an activation function.
+
+    Examples
+    --------
+    >>> X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+    >>> Y = np.array([[0], [1], [1], [0]])
+    >>> layer = Layer(2, 1)
+    >>> for e in range(1000):
+    >>>     layer.backward(layer.forward(X) - Y, X, 0.001)
+    >>> accuracy = 1 - np.mean(np.abs(layer.forward(X) - Y))
+    0.48365834304155164
+
+    Parameters
+    ----------
+    input_dim : int
+        The number of input features.
+    output_dim : int
+        The number of output features.
+    activation_function : type[ActivationFunction]
+        The activation function to use. If None, the default activation function is used. (f(x) = x)
+    """
+
+    def __init__(self, input_dim: int, output_dim: int,
+                 activation_function: type[ActivationFunction] = ActivationFunction):
         self.W = np.random.randn(input_dim + 1, output_dim) * 0.01
         self.activation_function = activation_function
         self.input_dim = input_dim

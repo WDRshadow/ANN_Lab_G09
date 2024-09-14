@@ -12,10 +12,8 @@ from utils import Module, Layer, ReLU, Tanh, DataGenerator2, GaussFunctionData
 class MLP(Module):
     def __init__(self, input_dim: int, output_dim: int, hidden_dim: int = 5, study_rate=0.001, epochs=3000):
         super().__init__(study_rate, epochs)
-        self.layer1 = Layer(input_dim, hidden_dim, ReLU)
-        self.layer2 = Layer(hidden_dim, output_dim, Tanh)
-        self.layers.append(self.layer1)
-        self.layers.append(self.layer2)
+        self.layers.append(Layer(input_dim, hidden_dim, ReLU))
+        self.layers.append(Layer(hidden_dim, output_dim, Tanh))
 
 
 class MLP2(nn.Module):
