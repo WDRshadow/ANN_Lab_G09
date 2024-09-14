@@ -3,38 +3,19 @@ import unittest
 import numpy as np
 import torch
 from matplotlib import pyplot as plt
-from torch import nn
 
-import part2
-from utils import Module, Layer, ReLU, Tanh, DataGenerator2, GaussFunctionData
+from utils import MLP, Layer, ReLU, Tanh, DataGenerator2, GaussFunctionData
 
 
-class MLP(Module):
+class DLP(MLP):
+    """
+    Double Layer Perceptron, which has 2 layers, the first layer has hidden_dim neurons and the second layer has
+    output_dim neurons. The activation function of the first layer is ReLU and the second layer is Tanh.
+    """
     def __init__(self, input_dim: int, output_dim: int, hidden_dim: int = 5, study_rate=0.001, epochs=3000):
         super().__init__(study_rate, epochs)
         self.layers.append(Layer(input_dim, hidden_dim, ReLU))
         self.layers.append(Layer(hidden_dim, output_dim, Tanh))
-
-
-class Encoder(Module):
-    def __init__(self, study_rate=0.001, epochs=3000):
-        super().__init__(study_rate, epochs)
-        self.layers.append(Layer(8, 3, Tanh))
-        self.layers.append(Layer(3, 8, Tanh))
-
-
-class MLP2(nn.Module):
-    def __init__(self, input_dim: int, output_dim: int, hidden_dim: int = 5):
-        super(MLP2, self).__init__()
-        self.fc1 = nn.Linear(input_dim, hidden_dim)
-        self.fc2 = nn.Linear(hidden_dim, output_dim)
-        self.Tanh = nn.Tanh()
-        self.ReLU = nn.ReLU()
-
-    def forward(self, x):
-        x = self.ReLU(self.fc1(x))
-        x = self.Tanh(self.fc2(x))
-        return x
 
 
 def plot_loss(losses, add_title=''):
@@ -64,7 +45,7 @@ def plot(data_generator: DataGenerator2, model, add_title=''):
     Z = np.zeros(X.shape)
     for i in range(X.shape[0]):
         for j in range(X.shape[1]):
-            if model.__class__.__name__ == 'MLP':
+            if model.__class__.__name__ == 'MLP1':
                 Z[i, j] = model(np.array([[X[i, j], Y[i, j]]]))
             elif model.__class__.__name__ == 'MLP2':
                 Z[i, j] = model(torch.tensor([[X[i, j], Y[i, j]]]).float()).item()
@@ -104,10 +85,10 @@ class Test(unittest.TestCase):
             sigmaA2=0.2
         )
 
-    def train_and_test(self, X_val, Y_val, add_title='', model: Module = None, is_plot=True, is_plot_loss=True):
+    def train_and_test(self, X_val, Y_val, add_title='', model: MLP = None, is_plot=True, is_plot_loss=True):
         X, Y = self.data_generator.data
         if model is None:
-            model = MLP(2, 1, study_rate=self.study_rate, epochs=self.epochs)
+            model = DLP(2, 1, study_rate=self.study_rate, epochs=self.epochs)
         losses = model.train(X, Y)
         model.test(X_val, Y_val)
         if is_plot:
@@ -119,22 +100,6 @@ class Test(unittest.TestCase):
     def test(self):
         X_val, Y_val = self.data_generator.randomly_remove_data(0.3, 0.3)
         self.train_and_test(X_val, Y_val)
-
-    def test_pytorch(self):
-        X, Y = self.data_generator.data
-        X_train = X[:-100]
-        Y_train = Y[:-100].T[0]
-        X_val = X[-100:]
-        Y_val = Y[-100:].T[0]
-        mlp = MLP2(2, 1)
-        losses = part2.train(mlp, torch.tensor(X_train).float(), torch.tensor(Y_train).float(),
-                             torch.tensor(X_val).float(),
-                             torch.tensor(Y_val).float(), study_rate=self.study_rate, epochs=self.epochs)
-        part2.test_model(mlp, torch.tensor(X_val).float(), torch.tensor(Y_val).float())
-
-        # plot the model
-        plot(self.data_generator, mlp, ' - PyTorch')
-        plot_loss(losses, ' - PyTorch')
 
     def test_remove_case(self):
         losses = []
@@ -155,7 +120,7 @@ class Test(unittest.TestCase):
         losses = []
         X_val, Y_val = self.data_generator.randomly_remove_data(0.3, 0.3)
         for hidden_dim in range(1, 7):
-            mlp = MLP(2, 1, hidden_dim=hidden_dim, study_rate=self.study_rate, epochs=self.epochs)
+            mlp = DLP(2, 1, hidden_dim=hidden_dim, study_rate=self.study_rate, epochs=self.epochs)
             losses.append(self.train_and_test(X_val, Y_val, ' - hidden_dim = ' + str(hidden_dim), mlp, False, False))
         plot_losses(losses, ' - Hidden Dimension', 'hidden_dim = ')
 
@@ -164,7 +129,7 @@ class Test(unittest.TestCase):
         self.data_generator.plot()
         X_val, Y_val = self.data_generator.randomly_remove_data(0.3)
         self.data_generator.reset_data()
-        mlp = MLP(2, 1, study_rate=self.study_rate, epochs=self.epochs)
+        mlp = DLP(2, 1, study_rate=self.study_rate, epochs=self.epochs)
         self.train_and_test(X_val, Y_val, ' - Gauss Function Data', mlp, False)
         pred = mlp(self.data_generator.data_copy[0])
         self.data_generator.Z = pred.reshape(self.data_generator.Z.shape)
@@ -182,7 +147,9 @@ class Test(unittest.TestCase):
 
         X = one_hot_encode(X)
         X_val = one_hot_encode(X_val)
-        encoder = Encoder(study_rate=0.001, epochs=3000)
-        losses = encoder.train(X, X, True)
+        encoder = MLP(0.001, 5000)
+        encoder.layers.append(Layer(8, 3, Tanh))
+        encoder.layers.append(Layer(3, 8, Tanh))
+        losses = encoder.train(X, X)
         encoder.test(X_val, X_val)
         plot_loss(losses, ' - Encoder')

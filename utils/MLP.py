@@ -3,7 +3,7 @@ import numpy as np
 from .ActivationFunction import ActivationFunction
 
 
-class Module:
+class MLP:
     """
     A simple implementation of a Multi-Layer Perceptron (MLP) using numpy.
 
@@ -11,7 +11,7 @@ class Module:
     --------
     >>> X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
     >>> Y = np.array([[0], [1], [1], [0]])
-    >>> model = Module(0.01, 1000)
+    >>> model = MLP(0.01, 1000)
     >>> model.layers.append(Layer(2, 5))
     >>> model.layers.append(Layer(5, 1))
     >>> model.train(X, Y)
