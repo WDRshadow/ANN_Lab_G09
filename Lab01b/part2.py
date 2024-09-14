@@ -3,16 +3,16 @@ import unittest
 import torch
 from torch import nn, optim
 
-from Lab01b.part1 import plot_loss
+from Lab01b.part1 import plot_loss, plot_losses
 from utils import MackeyGlass
 
 
 class MLP(nn.Module):
-    def __init__(self):
+    def __init__(self, h1: int = 5, h2: int = 6):
         super(MLP, self).__init__()
-        self.fc1 = nn.Linear(4, 5)
-        self.fc2 = nn.Linear(5, 8)
-        self.fc3 = nn.Linear(8, 1)
+        self.fc1 = nn.Linear(4, h1)
+        self.fc2 = nn.Linear(h1, h2)
+        self.fc3 = nn.Linear(h2, 1)
         self.Sigmoid = nn.Sigmoid()
         self.ReLU = nn.ReLU()
 
@@ -24,7 +24,7 @@ class MLP(nn.Module):
 
 
 def train(model: nn.Module, train_X, train_Y, val_X, val_Y, epochs=3000, study_rate=0.001, regularization=None,
-          patience=10):
+          patience=10, msg=True):
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=study_rate, weight_decay=regularization if regularization else 0.0)
 
@@ -55,7 +55,7 @@ def train(model: nn.Module, train_X, train_Y, val_X, val_Y, epochs=3000, study_r
             print(f'Early stopping at epoch {epoch}')
             break
 
-        if epoch % 100 == 0:
+        if epoch % 100 == 0 and msg:
             print(f'Epoch {epoch}, Training Loss: {loss.item()}, Validation Loss: {val_loss.item()}')
         losses.append(loss.item())
     return losses
@@ -70,17 +70,35 @@ def test_model(model, test_X, test_Y):
 
 
 class Test(unittest.TestCase):
-    def test(self):
+    def __init__(self, *args, **kwargs):
+        super(Test, self).__init__(*args, **kwargs)
         X, Y = MackeyGlass().generate_data()
         # average device the data into training, validation and testing
-        X_train = X[:400]
-        Y_train = Y[:400]
-        X_val = X[401:800]
-        Y_val = Y[401:800]
-        X_test = X[800:]
-        Y_test = Y[800:]
-        mlp = MLP()
-        losses = train(mlp, torch.tensor(X_train).float(), torch.tensor(Y_train).float(), torch.tensor(X_val).float(),
-                       torch.tensor(Y_val).float(), regularization=0.001, epochs=10000)
-        plot_loss(losses)
-        test_model(mlp, torch.tensor(X_test).float(), torch.tensor(Y_test).float())
+        self.X_train = X[:400]
+        self.Y_train = Y[:400]
+        self.X_val = X[401:800]
+        self.Y_val = Y[401:800]
+        self.X_test = X[800:]
+        self.Y_test = Y[800:]
+
+    def train_and_test(self, model: MLP = None, regularization=0.001, epochs=30000, study_rate=0.001, is_plot=True):
+        if model is None:
+            model = MLP()
+        losses = train(model, torch.tensor(self.X_train).float(), torch.tensor(self.Y_train).float(),
+                       torch.tensor(self.X_val).float(), torch.tensor(self.Y_val).float(), epochs, study_rate,
+                       regularization, msg=False)
+        if is_plot:
+            plot_loss(losses)
+        test_model(model, torch.tensor(self.X_test).float(), torch.tensor(self.Y_test).float())
+        return losses
+
+    def test(self):
+        self.train_and_test()
+
+    def test_dim_cases(self):
+        losses = []
+        for h1 in [3, 4, 5]:
+            for h2 in [2, 4, 6]:
+                print(f'Testing with h1={h1}, h2={h2}')
+                losses.append(self.train_and_test(MLP(h1, h2), is_plot=False))
+        plot_losses(losses, ' - Hidden Dimension', 'line ')
