@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sympy import false
 
-from utils import SingleLevelPerceptron, PerceptronLearning, DeltaRuleLearning, DataGenerator
+from utils import SingleLevelPerceptron, PerceptronLearning, DeltaRuleLearning, DataGenerator, DataGenerator2
 
 
 def plot(model: SingleLevelPerceptron, data: (np.ndarray, np.ndarray), title="Generated Data"):
@@ -48,14 +48,14 @@ def plot(model: SingleLevelPerceptron, data: (np.ndarray, np.ndarray), title="Ge
     plt.show()
 
 
-def plot_errors(model: SingleLevelPerceptron):
+def plot_errors(model: SingleLevelPerceptron, add_title=""):
     """
     Plot the errors over the epochs
     """
     plt.plot(model.errors)
     plt.xlabel("Epochs")
     plt.ylabel("Error")
-    plt.title("Error over epochs")
+    plt.title("Error over epochs" + add_title)
     plt.show()
 
 
@@ -131,19 +131,19 @@ class Test(unittest.TestCase):
             sigmaB=0.3
         )
 
-    def test_perceptron_learning(self):
+    def test_perceptron_learning(self, add_title=""):
         perceptron = PerceptronLearning(2, 1, study_rate=self.study_rate, epochs=self.epochs)
         perceptron.train(self.data_generator.data)
-        plot(perceptron, self.data_generator.data, title="Perceptron Learning Data")
-        plot_errors(perceptron)
+        plot(perceptron, self.data_generator.data, title="Perceptron Learning Data" + add_title)
+        plot_errors(perceptron, add_title)
 
-    def test_delta_rule_learning(self):
+    def test_delta_rule_learning(self, add_title=""):
         delta_rule = DeltaRuleLearning(2, 1, study_rate=self.study_rate, epochs=self.epochs)
         delta_rule.train(self.data_generator.data, learning_type="b")
-        plot(delta_rule, self.data_generator.data, title="Delta Rule Learning Data")
-        plot_errors(delta_rule)
+        plot(delta_rule, self.data_generator.data, title="Delta Rule Learning Data" + add_title)
+        plot_errors(delta_rule, add_title)
 
-    def test_all(self, is_plot=True):
+    def test_both(self, is_plot=True):
         perceptron = PerceptronLearning(2, 1, study_rate=self.study_rate, epochs=self.epochs)
         perceptron.train(self.data_generator.data)
         delta_rule = DeltaRuleLearning(2, 1, study_rate=self.study_rate, epochs=self.epochs)
@@ -154,9 +154,9 @@ class Test(unittest.TestCase):
         return perceptron, delta_rule
 
     def test_different_study_rate(self):
-        perceptron, delta_rule = self.test_all(is_plot=false)
+        perceptron, delta_rule = self.test_both(is_plot=false)
         self.study_rate = 0.1
-        perceptron1, delta_rule1 = self.test_all(is_plot=false)
+        perceptron1, delta_rule1 = self.test_both(is_plot=false)
         two_in_one_plot(self.data_generator, perceptron, perceptron1)
         error_two_in_one_plot(perceptron, perceptron1)
         two_in_one_plot(self.data_generator, delta_rule, delta_rule1)
@@ -174,3 +174,24 @@ class Test(unittest.TestCase):
         print("Time for batch: ", time.time() - time_0)
         two_in_one_plot(self.data_generator, delta_rule, delta_rule2)
         error_two_in_one_plot(delta_rule, delta_rule2)
+
+    def test_delta_remove_case(self):
+        self.data_generator = DataGenerator2(
+            n=300,
+            mA=[1.5, 1.0],
+            sigmaA=0.3,
+            mB=[-0.0, -0.1],
+            sigmaB=0.4,
+            mA2=[-1.5, 0.8],
+            sigmaA2=0.3
+        )
+        self.test_delta_rule_learning()
+        # randomly remove 25% of the data from each class
+        self.data_generator.randomly_remove_data(0.25, 0.25)
+        self.test_delta_rule_learning(' - 25% of data removed from each class')
+        # randomly remove 50% of the data from A class
+        self.data_generator.randomly_remove_data(0.5, 0)
+        self.test_delta_rule_learning(' - 50% of data removed from class A')
+        # Randomly remove 20% of the data points from class A where x0 < 0 and 80% of the data points from class A where x0 >= 0.
+        self.data_generator.randomly_remove_specific_data()
+        self.test_delta_rule_learning(' - 20% of data removed from class A where x0 < 0 and 80% where x0 >= 0')
