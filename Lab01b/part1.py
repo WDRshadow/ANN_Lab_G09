@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 from torch import nn
 
 import part2
-from utils import Module, Layer, ReLU, Tanh, DataGenerator2
+from utils import Module, Layer, ReLU, Tanh, DataGenerator2, GaussFunctionData
 
 
 class MLP(Module):
@@ -153,3 +153,14 @@ class Test(unittest.TestCase):
             mlp = MLP(2, 1, hidden_dim=hidden_dim, study_rate=self.study_rate, epochs=self.epochs)
             losses.append(self.train_and_test(X_val, Y_val, ' - hidden_dim = ' + str(hidden_dim), mlp, False, False))
         plot_losses(losses, ' - Hidden Dimension', 'hidden_dim = ')
+
+    def test_gauss(self):
+        self.data_generator = GaussFunctionData()
+        self.data_generator.plot()
+        X_val, Y_val = self.data_generator.randomly_remove_data(0.3)
+        self.data_generator.reset_data()
+        mlp = MLP(2, 1, study_rate=self.study_rate, epochs=self.epochs)
+        self.train_and_test(X_val, Y_val, ' - Gauss Function Data', mlp, False)
+        pred = mlp(self.data_generator.data_copy[0])
+        self.data_generator.Z = pred.reshape(self.data_generator.Z.shape)
+        self.data_generator.plot()

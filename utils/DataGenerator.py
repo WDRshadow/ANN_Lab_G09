@@ -215,6 +215,43 @@ class MackeyGlass:
         return np.array(inputs), np.array(outputs)
 
 
+class GaussFunctionData:
+    def __init__(self, x=(-5, 5, 0.5), y=(-5, 5, 0.5)):
+        self.X, self.Y = np.meshgrid(np.arange(x[0], x[1], x[2]), np.arange(y[0], y[1], y[2]))
+        self.Z = self.gauss_function(self.X, self.Y)
+        self.data = np.hstack([self.X.reshape(-1, 1), self.Y.reshape(-1, 1)]), self.Z.reshape(-1, 1)
+        self.data_copy = (self.data[0].copy(), self.data[1].copy())
+
+    @staticmethod
+    def gauss_function(x, y):
+        return np.exp(-(x ** 2 + y ** 2) / 10) - 0.5
+
+    def randomly_mix_data(self):
+        data = np.hstack([self.data[0], self.data[1]])
+        np.random.shuffle(data)
+        coords, labels = np.hsplit(data, [2])
+        self.data = coords, labels
+
+    def randomly_remove_data(self, perc):
+        data = np.hstack([self.data[0], self.data[1]])
+        np.random.shuffle(data)
+        n = int(len(data) * (1 - perc))
+        data_new = data[:n]
+        coords, labels = np.hsplit(data_new, [2])
+        self.data = coords, labels
+        removed_data = data[n:]
+        return np.hsplit(removed_data, [2])
+
+    def reset_data(self):
+        self.data = self.data_copy
+
+    def plot(self):
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.plot_surface(self.X, self.Y, self.Z, cmap='viridis')
+        plt.show()
+
+
 class Test(unittest.TestCase):
     def test_1(self):
         data_generator = DataGenerator()
@@ -250,3 +287,7 @@ class Test(unittest.TestCase):
         points = data_generator.randomly_remove_specific_data()
         print(points)
         data_generator.plot()
+
+    def test_gauss(self):
+        gauss = GaussFunctionData()
+        gauss.plot()
