@@ -9,7 +9,8 @@ class DataGenerator:
     Properties:
         data (np.ndarray): the data points and their labels
     """
-    def __init__(self, n=100, mA=None, sigmaA = 0.5, mB=None, sigmaB = 0.5):
+
+    def __init__(self, n=100, mA=None, sigmaA=0.5, mB=None, sigmaB=0.5):
         self.n = n
 
         if mA is None:
@@ -23,7 +24,6 @@ class DataGenerator:
 
         self.data = self._generate_data()
         self._randomly_mix_data()
-
 
     @staticmethod
     def _generate_array(n, mean, sigma) -> np.ndarray:
@@ -40,11 +40,11 @@ class DataGenerator:
 
     def _generate_data(self):
 
-        class1 = self._generate_array(self.n, self.mA, self.sigmaA)
-        class0 = self._generate_array(self.n, self.mB, self.sigmaB)
+        classA = self._generate_array(self.n, self.mA, self.sigmaA)
+        classB = self._generate_array(self.n, self.mB, self.sigmaB)
 
         # Determine different ways to stack the classes
-        data = np.vstack([class1, class0])
+        data = np.vstack([classA, classB])
 
         labels1 = np.full((self.n, 1), 1)
         labels0 = np.full((self.n, 1), -1)
@@ -71,11 +71,11 @@ class DataGenerator:
         fig, ax = plt.subplots()
 
         labels = self.data[1].flatten()
-        class1 = self.data[0][labels == 1]
-        class0 = self.data[0][labels == -1]
+        classA = self.data[0][labels == 1]
+        classB = self.data[0][labels == -1]
 
-        ax.scatter(class1.transpose()[0, :], class1.transpose()[1, :], color='blue', label='Class 1')
-        ax.scatter(class0.transpose()[0, :], class0.transpose()[1, :], color='red', label='Class 0')
+        ax.scatter(classA.transpose()[0, :], classA.transpose()[1, :], color='blue', label='Class 1')
+        ax.scatter(classB.transpose()[0, :], classB.transpose()[1, :], color='red', label='Class 0')
 
         ax.set_xlim(-2, 3)
         ax.set_ylim(-2, 3)
@@ -88,7 +88,7 @@ class DataGenerator:
 
 
 class DataGenerator2(DataGenerator):
-    def __init__(self, n=100, mA=None, sigmaA = 0.5, mB=None, sigmaB = 0.5, mA2=None, sigmaA2 = 0.5):
+    def __init__(self, n=100, mA=None, sigmaA=0.5, mB=None, sigmaB=0.5, mA2=None, sigmaA2=0.5):
         if mA2 is None:
             mA2 = [-1.0, 0.0]
         self.mA2 = mA2
@@ -99,13 +99,12 @@ class DataGenerator2(DataGenerator):
         self._randomly_mix_data()
 
     def _generate_data(self):
-
-        class1 = self._generate_array(self.n, self.mA, self.sigmaA)
-        class0 = self._generate_array(self.n, self.mB, self.sigmaB)
-        class1_2 = self._generate_array(self.n, self.mA2, self.sigmaA2)
+        classA = self._generate_array(self.n, self.mA, self.sigmaA)
+        classB = self._generate_array(self.n, self.mB, self.sigmaB)
+        classA_2 = self._generate_array(self.n, self.mA2, self.sigmaA2)
 
         # Determine different ways to stack the classes
-        data = np.vstack([class1, class0, class1_2])
+        data = np.vstack([classA, classB, classA_2])
 
         labels1 = np.full((self.n, 1), 1)
         labels0 = np.full((self.n, 1), -1)
@@ -127,7 +126,8 @@ class MackeyGlass:
         x = np.zeros(self.n)
         x[0] = 1.5
         for i in range(1, self.n):
-            x[i] = x[i - 1] + (self.beta * x[i - 1 - self.tau]) / (1 + x[i - 1 - self.tau] ** 10) - self.gamma * x[i - 1]
+            x[i] = x[i - 1] + (self.beta * x[i - 1 - self.tau]) / (1 + x[i - 1 - self.tau] ** 10) - self.gamma * x[
+                i - 1]
         return x
 
     def generate_data(self):

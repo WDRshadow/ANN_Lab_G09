@@ -5,8 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sympy import false
 
-from DataGenerator import DataGenerator
-from utils import SingleLevelPerceptron, PerceptronLearning, DeltaRuleLearning
+from utils import SingleLevelPerceptron, PerceptronLearning, DeltaRuleLearning, DataGenerator
 
 
 def plot(model: SingleLevelPerceptron, data: (np.ndarray, np.ndarray), title="Generated Data"):
@@ -33,11 +32,11 @@ def plot(model: SingleLevelPerceptron, data: (np.ndarray, np.ndarray), title="Ge
     ax.axline(xy1=point, slope=slope, color='C0', label='Decision Line')
 
     labels = data[1].flatten()
-    class1 = data[0][labels == 1]
-    class0 = data[0][labels == -1]
+    classA = data[0][labels == 1]
+    classB = data[0][labels == -1]
 
-    ax.scatter(class1.transpose()[0, :], class1.transpose()[1, :], color='blue', label='Class 1')
-    ax.scatter(class0.transpose()[0, :], class0.transpose()[1, :], color='red', label='Class 0')
+    ax.scatter(classA.transpose()[0, :], classA.transpose()[1, :], color='red', label='Class A')
+    ax.scatter(classB.transpose()[0, :], classB.transpose()[1, :], color='blue', label='Class B')
 
     ax.set_xlim(-2, 3)
     ax.set_ylim(-2, 3)
@@ -92,11 +91,11 @@ def two_in_one_plot(data_generator: DataGenerator, model1: SingleLevelPerceptron
     ax.axline(xy1=point, slope=slope, color='C1', label='Decision Line' + model2.__class__.__name__)
 
     labels = data_generator.data[1].flatten()
-    class1 = data_generator.data[0][labels == 1]
-    class0 = data_generator.data[0][labels == -1]
+    classA = data_generator.data[0][labels == 1]
+    classB = data_generator.data[0][labels == -1]
 
-    ax.scatter(class1.transpose()[0, :], class1.transpose()[1, :], color='blue', label='Class 1')
-    ax.scatter(class0.transpose()[0, :], class0.transpose()[1, :], color='red', label='Class 0')
+    ax.scatter(classA.transpose()[0, :], classA.transpose()[1, :], color='red', label='Class A')
+    ax.scatter(classB.transpose()[0, :], classB.transpose()[1, :], color='blue', label='Class B')
 
     ax.set_xlim(-2, 5)
     ax.set_ylim(-2, 5)
@@ -153,16 +152,6 @@ class Test(unittest.TestCase):
             two_in_one_plot(self.data_generator, perceptron, delta_rule)
             error_two_in_one_plot(perceptron, delta_rule)
         return perceptron, delta_rule
-
-    def test_left_right_side(self):
-        self.data_generator = DataGenerator(
-            n=10,
-            mA=[-1.0, 0.0],
-            sigmaA=0.5,
-            mB=[1.0, 0.0],
-            sigmaB=0.5
-        )
-        self.test_all()
 
     def test_different_study_rate(self):
         perceptron, delta_rule = self.test_all(is_plot=false)

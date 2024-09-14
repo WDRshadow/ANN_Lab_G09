@@ -3,7 +3,7 @@ import unittest
 import torch
 from torch import nn, optim
 
-from DataGenerator import MackeyGlass
+from utils import MackeyGlass
 
 
 class MLP(nn.Module):

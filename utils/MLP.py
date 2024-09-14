@@ -1,6 +1,6 @@
 import numpy as np
 
-from ActivationFunction import ActivationFunction
+from .ActivationFunction import ActivationFunction
 
 
 class Module:

@@ -6,9 +6,7 @@ from matplotlib import pyplot as plt
 from torch import nn
 
 import part2
-from DataGenerator import DataGenerator2
-from utils import ReLU, Tanh
-from utils import Module, Layer
+from utils import Module, Layer, ReLU, Tanh, DataGenerator2
 
 
 class MLP(Module):
