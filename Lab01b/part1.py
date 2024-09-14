@@ -12,10 +12,10 @@ from utils import Module, Layer, ReLU, Tanh, DataGenerator2
 class MLP(Module):
     def __init__(self, input_dim: int, output_dim: int, study_rate=0.001, epochs=3000):
         super().__init__(study_rate, epochs)
-        self.layer1 = Layer(input_dim, 10, ReLU, self.study_rate)
-        self.layer2 = Layer(10, 10, ReLU, self.study_rate)
-        self.layer3 = Layer(10, 5, Tanh, self.study_rate)
-        self.layer4 = Layer(5, output_dim, Tanh, self.study_rate)
+        self.layer1 = Layer(input_dim, 10, ReLU)
+        self.layer2 = Layer(10, 10, ReLU)
+        self.layer3 = Layer(10, 5, Tanh)
+        self.layer4 = Layer(5, output_dim, Tanh)
         self.layers.append(self.layer1)
         self.layers.append(self.layer2)
         self.layers.append(self.layer3)
