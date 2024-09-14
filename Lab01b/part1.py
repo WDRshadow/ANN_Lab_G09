@@ -1,7 +1,6 @@
 import unittest
 
 import numpy as np
-import torch
 from matplotlib import pyplot as plt
 
 from utils import MLP, Layer, ReLU, Tanh, DataGenerator2, GaussFunctionData
@@ -12,6 +11,7 @@ class DLP(MLP):
     Double Layer Perceptron, which has 2 layers, the first layer has hidden_dim neurons and the second layer has
     output_dim neurons. The activation function of the first layer is ReLU and the second layer is Tanh.
     """
+
     def __init__(self, input_dim: int, output_dim: int, hidden_dim: int = 5, study_rate=0.001, epochs=3000):
         super().__init__(study_rate, epochs)
         self.layers.append(Layer(input_dim, hidden_dim, ReLU))
@@ -45,10 +45,7 @@ def plot(data_generator: DataGenerator2, model, add_title=''):
     Z = np.zeros(X.shape)
     for i in range(X.shape[0]):
         for j in range(X.shape[1]):
-            if model.__class__.__name__ == 'MLP1':
-                Z[i, j] = model(np.array([[X[i, j], Y[i, j]]]))
-            elif model.__class__.__name__ == 'MLP2':
-                Z[i, j] = model(torch.tensor([[X[i, j], Y[i, j]]]).float()).item()
+            Z[i, j] = model(np.array([[X[i, j], Y[i, j]]]))
 
     # plot the decision boundary
     plt.contourf(X, Y, Z, levels=1, colors=['blue', 'red'], alpha=0.5)
