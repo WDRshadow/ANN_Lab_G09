@@ -28,6 +28,7 @@ def train(model: nn.Module, train_X, train_Y, val_X, val_Y, epochs=3000, study_r
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=study_rate, weight_decay=regularization if regularization else 0.0)
 
+    losses = []
     for epoch in range(epochs):
         model.train()
         optimizer.zero_grad()
@@ -44,13 +45,16 @@ def train(model: nn.Module, train_X, train_Y, val_X, val_Y, epochs=3000, study_r
 
         if epoch % 100 == 0:
             print(f'Epoch {epoch}, Training Loss: {loss.item()}, Validation Loss: {val_loss.item()}')
+        losses.append(loss.item())
+    return losses
 
 
-def test_model(model, test_X):
+def test_model(model, test_X, test_Y):
     model.eval()
     with torch.no_grad():
-        predictions = model(test_X).numpy()
-    return predictions
+        predictions = model(test_X).reshape(-1)
+    accuracy = 1 - torch.mean(torch.abs(predictions - test_Y))
+    print(f'Accuracy: {accuracy}')
 
 
 class Test(unittest.TestCase):
@@ -66,5 +70,4 @@ class Test(unittest.TestCase):
         mlp = MLP()
         train(mlp, torch.tensor(X_train).float(), torch.tensor(Y_train).float(), torch.tensor(X_val).float(),
               torch.tensor(Y_val).float(), regularization=0.001)
-        predictions = test_model(mlp, torch.tensor(X_test).float())
-        print(predictions)
+        test_model(mlp, torch.tensor(X_test).float(), torch.tensor(Y_test).float())

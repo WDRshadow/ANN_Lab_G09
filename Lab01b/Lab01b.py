@@ -24,20 +24,20 @@ class MLP(Module):
 
 
 class MLP2(nn.Module):
-    def __init__(self):
+    def __init__(self, input_dim: int, output_dim: int):
         super(MLP2, self).__init__()
-        self.fc1 = nn.Linear(2, 10)
+        self.fc1 = nn.Linear(input_dim, 10)
         self.fc2 = nn.Linear(10, 10)
         self.fc3 = nn.Linear(10, 5)
-        self.fc4 = nn.Linear(5, 1)
-        self.Sigmoid = nn.Sigmoid()
+        self.fc4 = nn.Linear(5, output_dim)
+        self.Tanh = nn.Tanh()
         self.ReLU = nn.ReLU()
 
     def forward(self, x):
         x = self.ReLU(self.fc1(x))
         x = self.ReLU(self.fc2(x))
-        x = self.Sigmoid(self.fc3(x))
-        x = self.Sigmoid(self.fc4(x))
+        x = self.Tanh(self.fc3(x))
+        x = self.Tanh(self.fc4(x))
         return x
 
 
@@ -45,7 +45,7 @@ class Test(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(Test, self).__init__(*args, **kwargs)
         self.study_rate = 0.001
-        self.epochs = 30000
+        self.epochs = 3000
 
         self.data_generator = DataGenerator2(
             n=300,
@@ -57,9 +57,13 @@ class Test(unittest.TestCase):
             sigmaA2=0.2
         )
 
+    def test_all(self):
+        self.test()
+        self.test_pytorch()
+
     def test(self):
-        mlp = MLP(2, 1, self.study_rate, self.epochs)
         X, Y = self.data_generator.data
+        mlp = MLP(2, 1, self.study_rate, self.epochs)
         # 20% of the data is used for testing
         losses = mlp.train(X[:-100], Y[:-100], msg=True)
         # test the model and print the accuracy
@@ -71,20 +75,22 @@ class Test(unittest.TestCase):
         # plot the loss
         self.plot_loss(losses)
 
-    def test_third_lib(self):
+    def test_pytorch(self):
         X, Y = self.data_generator.data
-        X_train = torch.tensor(X[:-100]).float()
-        Y_train = torch.tensor(Y[:-100]).float()
-        X_val = torch.tensor(X[-100:]).float()
-        Y_val = torch.tensor(Y[-100:]).float()
-        mlp = MLP2()
-        part2.train(mlp, X_train, Y_train, X_val, Y_val, study_rate=self.study_rate, epochs=self.epochs)
-        predictions = part2.test_model(mlp, X_val)
-        accuracy = 1 - np.mean(np.abs(predictions - Y_val.numpy()))
-        print(f'Accuracy: {accuracy}')
+        X_train = X[:-100]
+        Y_train = Y[:-100].T[0]
+        X_val = X[-100:]
+        Y_val = Y[-100:].T[0]
+        mlp = MLP2(2, 1)
+        losses = part2.train(mlp, torch.tensor(X_train).float(), torch.tensor(Y_train).float(), torch.tensor(X_val).float(),
+              torch.tensor(Y_val).float(), study_rate=self.study_rate, epochs=self.epochs)
+        part2.test_model(mlp, torch.tensor(X_val).float(), torch.tensor(Y_val).float())
 
         # plot the model
         self.plot(mlp)
+
+        # plot the loss
+        self.plot_loss(losses)
 
 
     @staticmethod
