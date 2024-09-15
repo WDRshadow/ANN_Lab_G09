@@ -5,7 +5,7 @@ from torch import nn, optim
 
 from Lab01b.part1 import plot_loss, plot_losses
 from utils import MackeyGlass
-
+from Lab01b.graphing_matrix import graph_matrix
 
 class MLP(nn.Module):
     def __init__(self, h1: int = 5, h2: int = 6):
@@ -67,6 +67,7 @@ def test_model(model, test_X, test_Y):
         predictions = model(test_X).reshape(-1)
     accuracy = 1 - torch.mean(torch.abs(predictions - test_Y))
     print(f'Accuracy: {accuracy}')
+    return accuracy.item()
 
 
 class Test(unittest.TestCase):
@@ -89,16 +90,22 @@ class Test(unittest.TestCase):
                        regularization, msg=False)
         if is_plot:
             plot_loss(losses)
-        test_model(model, torch.tensor(self.X_test).float(), torch.tensor(self.Y_test).float())
-        return losses
+        accuracy = test_model(model, torch.tensor(self.X_test).float(), torch.tensor(self.Y_test).float())
+        return losses, accuracy
 
     def test(self):
         self.train_and_test()
 
     def test_dim_cases(self):
         losses = []
-        for h1 in [3, 4, 5]:
-            for h2 in [2, 4, 6]:
+        accuracies = []
+        n1 = [3, 4, 5]
+        n2 = [2, 4, 6]
+        for h1 in n1:
+            for h2 in n2:
                 print(f'Testing with h1={h1}, h2={h2}')
-                losses.append(self.train_and_test(MLP(h1, h2), is_plot=False))
+                loss, accuracy = self.train_and_test(MLP(h1, h2), is_plot=False)
+                losses.append(loss)
+                accuracies.append(accuracy)
         plot_losses(losses, ' - Hidden Dimension', 'line ')
+        graph_matrix(accuracies, n1, n2)
