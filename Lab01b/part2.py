@@ -94,12 +94,13 @@ class Test(unittest.TestCase):
         super(Test, self).__init__(*args, **kwargs)
         self.data_generator = MackeyGlass()
         self.data_generator.generate_data()
-        self.X_test, self.Y_test = self.data_generator.randomly_split_data(5/6)
+        self.X_test, self.Y_test = self.data_generator.randomly_pop_data(1/6, is_permanent=True)
 
     def train_and_test(self, model: MLP = None, regularization=0.001, epochs=30000, study_rate=0.001, is_plot=True, train_percentage=0.8):
         if model is None:
             model = MLP()
-        X_val, Y_val = self.data_generator.randomly_split_data(train_percentage)
+        self.data_generator.reset_data()
+        X_val, Y_val = self.data_generator.randomly_pop_data(1 - train_percentage)
         X_train, Y_train = self.data_generator.data
         losses, val_losses = train(model, torch.tensor(X_train).float(), torch.tensor(Y_train).float(),
                        torch.tensor(X_val).float(), torch.tensor(Y_val).float(), epochs, study_rate,
@@ -122,16 +123,27 @@ class Test(unittest.TestCase):
         for h1 in n1:
             for h2 in n2:
                 print(f'Testing with h1={h1}, h2={h2}')
-                loss, accuracy, val_losses = self.train_and_test(MLP(h1, h2), is_plot=False)
-                losses.append(loss)
-                test_losses.append(accuracy)
-                val_test_losses.append(val_losses[-1])
+                train_loss, test_loss, val_loss = self.train_and_test(MLP(h1, h2), is_plot=False)
+                losses.append(train_loss)
+                test_losses.append(test_loss)
+                val_test_losses.append(val_loss[-1])
                 order_refference.append(f'n1:{h1} & n2:{h2}')
         plot_losses(losses, ' - Hidden Dimension', order_refference)
         graph_matrix(val_test_losses, n1, n2, 
                      title='Validation Error for Different Node Combinations (n1 vs n2)')
         graph_matrix(test_losses, n1, n2, 
                      title='Test Error for Different Node Combinations (n1 vs n2)')
+
+    def test_training_percentage_case(self):
+        losses = []
+        test_losses = []
+        percentages = [0.2, 0.4, 0.6, 0.8]
+        for p in percentages:
+            print(f'Testing with training percentage={p}')
+            train_loss, test_loss, _ = self.train_and_test(train_percentage=p, is_plot=False)
+            losses.append(train_loss)
+            test_losses.append(test_loss)
+        plot_losses(losses, ' - Training Percentage', 'line ')
 
     def test_gaussian_noise(self):
         losses = []
@@ -140,13 +152,13 @@ class Test(unittest.TestCase):
         n2 = [3, 6, 9]
         noise = [0.05, 0.15]
         for n in noise:
+            self.data_generator.reset_data()
+            self.data_generator.add_gaussian_noise(std=n)
             for h2 in n2:
                 print(f'Testing with noise={n}, h2={h2}')
-                self.data_generator.generate_data()
-                self.data_generator.add_gaussian_noise(std=n)
-                loss, accuracy, _ = self.train_and_test(MLP(h2=h2), is_plot=False)
-                losses.append(loss)
-                test_losses.append(accuracy)
+                train_loss, test_loss, validation_loss = self.train_and_test(MLP(h2=h2), is_plot=False)
+                losses.append(train_loss)
+                test_losses.append(test_loss)
                 order_refference.append(f'n:{n2} & noise:{noise}')
-        plot_losses(losses, ' - Gaussian Noise', order_refference)
+        plot_losses(losses, ' - Gaussian Noise', 'line ')
         graph_matrix(test_losses, noise, n2, 'Noise Standard Deviation', 'n2 (Number of Nodes in Second Layer)', 'Test Loss for Different Noise Levels (Noise vs n2)')
