@@ -32,7 +32,8 @@ def train(model: nn.Module, train_X, train_Y, val_X, val_Y, epochs=3000, study_r
 
     best_val_loss = float('inf')
     patience_counter = 0
-    losses = []
+    train_losses = []
+    val_losses = []
     for epoch in range(epochs):
         model.train()
         optimizer.zero_grad()
@@ -41,7 +42,7 @@ def train(model: nn.Module, train_X, train_Y, val_X, val_Y, epochs=3000, study_r
         loss.backward()
         optimizer.step()
 
-        # Validation
+        # Validation phase
         model.eval()
         with torch.no_grad():
             val_output = model(val_X)
@@ -59,9 +60,10 @@ def train(model: nn.Module, train_X, train_Y, val_X, val_Y, epochs=3000, study_r
 
         if epoch % 100 == 0 and msg:
             print(f'Epoch {epoch}, Training Loss: {loss.item()}, Validation Loss: {val_loss.item()}')
-        losses.append(loss.item())
-    return losses
 
+        train_losses.append(loss.item())
+        val_losses.append(val_loss.item())
+    return train_losses, val_losses
 
 def test(model, test_X, test_Y):
     model.eval()
@@ -99,13 +101,13 @@ class Test(unittest.TestCase):
             model = MLP()
         X_val, Y_val = self.data_generator.randomly_split_data(train_percentage)
         X_train, Y_train = self.data_generator.data
-        losses = train(model, torch.tensor(X_train).float(), torch.tensor(Y_train).float(),
+        losses, val_losses = train(model, torch.tensor(X_train).float(), torch.tensor(Y_train).float(),
                        torch.tensor(X_val).float(), torch.tensor(Y_val).float(), epochs, study_rate,
                        regularization, msg=False)
         if is_plot:
-            plot_loss(losses)
+            plot_losses([losses, val_losses], label=['Training Error','Validation Error'])
         accuracy = test(model, torch.tensor(self.X_test).float(), torch.tensor(self.Y_test).float())
-        return losses, accuracy
+        return losses, accuracy, val_losses
 
     def test(self):
         self.train_and_test()
@@ -113,29 +115,38 @@ class Test(unittest.TestCase):
     def test_dim_cases(self):
         losses = []
         test_losses = []
+        val_test_losses = []
+        order_refference = []
         n1 = [3, 4, 5]
         n2 = [2, 4, 6]
         for h1 in n1:
             for h2 in n2:
                 print(f'Testing with h1={h1}, h2={h2}')
-                loss, accuracy = self.train_and_test(MLP(h1, h2), is_plot=False)
+                loss, accuracy, val_losses = self.train_and_test(MLP(h1, h2), is_plot=False)
                 losses.append(loss)
                 test_losses.append(accuracy)
-        plot_losses(losses, ' - Hidden Dimension', 'line ')
-        graph_matrix(test_losses, n1, n2)
+                val_test_losses.append(val_losses[-1])
+                order_refference.append(f'n1:{h1} & n2:{h2}')
+        plot_losses(losses, ' - Hidden Dimension', order_refference)
+        graph_matrix(val_test_losses, n1, n2, 
+                     title='Validation Error for Different Node Combinations (n1 vs n2)')
+        graph_matrix(test_losses, n1, n2, 
+                     title='Test Error for Different Node Combinations (n1 vs n2)')
 
     def test_gaussian_noise(self):
         losses = []
         test_losses = []
-        n2 = [2, 6, 9]
-        noice = [0.05, 0.15]
-        for n in noice:
+        order_refference = []
+        n2 = [3, 6, 9]
+        noise = [0.05, 0.15]
+        for n in noise:
             for h2 in n2:
                 print(f'Testing with noise={n}, h2={h2}')
                 self.data_generator.generate_data()
                 self.data_generator.add_gaussian_noise(std=n)
-                loss, accuracy = self.train_and_test(MLP(h2=h2), is_plot=False)
+                loss, accuracy, _ = self.train_and_test(MLP(h2=h2), is_plot=False)
                 losses.append(loss)
                 test_losses.append(accuracy)
-        plot_losses(losses, ' - Gaussian Noise', 'line ')
-        graph_matrix(test_losses, noice, n2, 'Noise Standard Deviation', 'n2 (Number of Nodes in Second Layer)', 'Test Loss for Different Noise Levels (Noise vs n2)')
+                order_refference.append(f'n:{n2} & noise:{noise}')
+        plot_losses(losses, ' - Gaussian Noise', order_refference)
+        graph_matrix(test_losses, noise, n2, 'Noise Standard Deviation', 'n2 (Number of Nodes in Second Layer)', 'Test Loss for Different Noise Levels (Noise vs n2)')

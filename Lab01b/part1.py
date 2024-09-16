@@ -27,11 +27,19 @@ def plot_loss(losses, add_title=''):
 
 
 def plot_losses(losses, add_title='', label=''):
+
+    if isinstance(label, str):
+        labels = [label + str(i + 1) for i in range(len(losses))]
+    elif isinstance(label, list) and len(label) == len(losses):
+        labels = label
+    else:
+        raise ValueError("label must be either a string or a list of the same length as losses")
+
     for i, loss in enumerate(losses):
-        plt.plot(loss, label=label + str(i + 1))
+        plt.plot(loss, label=labels[i])
     plt.legend()
     plt.xlabel('Epochs')
-    plt.ylabel('Loss')
+    plt.ylabel('MSE')
     plt.title('Loss over Epochs' + add_title)
     plt.show()
 
@@ -73,8 +81,8 @@ class Test(unittest.TestCase):
         self.epochs = 500
 
         self.data_generator = DataGenerator2(
-            n=300,
-            mA=[1.5, 0.5],
+            n=100,
+            mA=[1.0, 0.3],
             sigmaA=0.2,
             mB=[-0.0, -0.1],
             sigmaB=0.3,
