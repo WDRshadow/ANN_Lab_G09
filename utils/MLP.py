@@ -56,7 +56,7 @@ class MLP:
             else:
                 # (V^T*delta) * f'(H*)
                 delta = layer.backward(dO, Os[index - 1], self.study_rate)
-            dO = np.dot(layer.W, delta.T)[1:].T
+            dO = np.dot(delta, layer.W.T)[:, :-1]
 
     def train(self, X: np.ndarray, Y: np.ndarray, msg=False):
         losses = []
@@ -73,6 +73,7 @@ class MLP:
         O = self.forward(X)
         accuracy = 1 - np.mean(np.abs(O - Y))
         print(f"Accuracy: {accuracy}")
+        return accuracy
 
 
 class Layer:

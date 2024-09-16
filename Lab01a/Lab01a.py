@@ -3,7 +3,6 @@ import unittest
 
 import matplotlib.pyplot as plt
 import numpy as np
-from sympy import false
 
 from utils import SingleLevelPerceptron, PerceptronLearning, DeltaRuleLearning, DataGenerator, DataGenerator2
 
@@ -154,9 +153,9 @@ class Test(unittest.TestCase):
         return perceptron, delta_rule
 
     def test_different_study_rate(self):
-        perceptron, delta_rule = self.test_both(is_plot=false)
+        perceptron, delta_rule = self.test_both(is_plot=False)
         self.study_rate = 0.1
-        perceptron1, delta_rule1 = self.test_both(is_plot=false)
+        perceptron1, delta_rule1 = self.test_both(is_plot=False)
         two_in_one_plot(self.data_generator, perceptron, perceptron1)
         error_two_in_one_plot(perceptron, perceptron1)
         two_in_one_plot(self.data_generator, delta_rule, delta_rule1)

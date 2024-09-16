@@ -144,9 +144,15 @@ class Test(unittest.TestCase):
 
         X = one_hot_encode(X)
         X_val = one_hot_encode(X_val)
+        losses = []
+        encoder = MLP(0.001, 5000)
+        encoder.layers.append(Layer(8, 2, Tanh))
+        encoder.layers.append(Layer(2, 8, Tanh))
+        losses.append(encoder.train(X, X))
+        encoder.test(X_val, X_val)
         encoder = MLP(0.001, 5000)
         encoder.layers.append(Layer(8, 3, Tanh))
         encoder.layers.append(Layer(3, 8, Tanh))
-        losses = encoder.train(X, X)
+        losses.append(encoder.train(X, X))
         encoder.test(X_val, X_val)
-        plot_loss(losses, ' - Encoder')
+        plot_losses(losses, ' - Encoder', 'Case = ')
