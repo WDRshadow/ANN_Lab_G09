@@ -119,11 +119,22 @@ class Test(unittest.TestCase):
         for h1 in n1:
             for h2 in n2:
                 print(f'Testing with h1={h1}, h2={h2}')
-                loss, accuracy = self.train_and_test(MLP(h1, h2), is_plot=False)
-                losses.append(loss)
-                test_losses.append(accuracy)
+                train_loss, test_loss = self.train_and_test(MLP(h1, h2), is_plot=False)
+                losses.append(train_loss)
+                test_losses.append(test_loss)
         plot_losses(losses, ' - Hidden Dimension', 'line ')
         graph_matrix(test_losses, n1, n2)
+
+    def test_training_percentage_case(self):
+        losses = []
+        test_losses = []
+        percentages = [0.2, 0.4, 0.6, 0.8]
+        for p in percentages:
+            print(f'Testing with training percentage={p}')
+            train_loss, test_loss = self.train_and_test(train_percentage=p, is_plot=False)
+            losses.append(train_loss)
+            test_losses.append(test_loss)
+        plot_losses(losses, ' - Training Percentage', 'line ')
 
     def test_gaussian_noise(self):
         losses = []
@@ -135,8 +146,8 @@ class Test(unittest.TestCase):
             self.data_generator.add_gaussian_noise(std=n)
             for h2 in n2:
                 print(f'Testing with noise={n}, h2={h2}')
-                loss, accuracy = self.train_and_test(MLP(h2=h2), is_plot=False)
-                losses.append(loss)
-                test_losses.append(accuracy)
+                train_loss, test_loss = self.train_and_test(MLP(h2=h2), is_plot=False)
+                losses.append(train_loss)
+                test_losses.append(test_loss)
         plot_losses(losses, ' - Gaussian Noise', 'line ')
         graph_matrix(test_losses, noice, n2, 'Noise Standard Deviation', 'n2 (Number of Nodes in Second Layer)', 'Test Loss for Different Noise Levels (Noise vs n2)')
