@@ -1,11 +1,13 @@
 import unittest
 
+import numpy as np
 import torch
+from matplotlib import pyplot as plt
 from torch import nn, optim
+import seaborn as sns
 
 from Lab01b.part1 import plot_loss, plot_losses
 from utils import MackeyGlass
-from Lab01b.graphing_matrix import graph_matrix
 
 class MLP(nn.Module):
     def __init__(self, h1: int = 5, h2: int = 6):
@@ -35,15 +37,15 @@ def train(model: nn.Module, train_X, train_Y, val_X, val_Y, epochs=3000, study_r
         model.train()
         optimizer.zero_grad()
         output = model(train_X)
-        loss = criterion(output, train_Y.unsqueeze(1))
+        loss = criterion(output, train_Y)
         loss.backward()
         optimizer.step()
 
-        # 验证集上评估
+        # Validation
         model.eval()
         with torch.no_grad():
             val_output = model(val_X)
-            val_loss = criterion(val_output, val_Y.unsqueeze(1))
+            val_loss = criterion(val_output, val_Y)
 
         if val_loss < best_val_loss:
             best_val_loss = val_loss
@@ -61,36 +63,48 @@ def train(model: nn.Module, train_X, train_Y, val_X, val_Y, epochs=3000, study_r
     return losses
 
 
-def test_model(model, test_X, test_Y):
+def test(model, test_X, test_Y):
     model.eval()
     with torch.no_grad():
         predictions = model(test_X).reshape(-1)
-    accuracy = 1 - torch.mean(torch.abs(predictions - test_Y))
-    print(f'Accuracy: {accuracy}')
-    return accuracy.item()
+    test_loss = torch.mean(torch.square(predictions - test_Y))
+    print(f'Test Loss: {test_loss}')
+    return test_loss.item()
+
+
+
+def graph_matrix(items, n1, n2, labelx='n1 (Number of Nodes in First Layer)', labely='n2 (Number of Nodes in Second Layer)', title='Test Loss for Different Node Combinations (n1 vs n2)'):
+    accuracy_matrix = np.array(items).reshape(len(n1), len(n2))
+
+    plt.figure(figsize=(8, 6))
+    ax = sns.heatmap(accuracy_matrix, annot=True, cmap="YlGnBu", xticklabels=n2, yticklabels=n1, fmt='.6f')
+    ax.invert_yaxis()
+
+    ax.set_xlabel(labelx)
+    ax.set_ylabel(labely)
+    ax.set_title(title)
+
+    plt.show()
 
 
 class Test(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(Test, self).__init__(*args, **kwargs)
-        X, Y = MackeyGlass().generate_data()
-        # average device the data into training, validation and testing
-        self.X_train = X[:400]
-        self.Y_train = Y[:400]
-        self.X_val = X[401:800]
-        self.Y_val = Y[401:800]
-        self.X_test = X[800:]
-        self.Y_test = Y[800:]
+        self.data_generator = MackeyGlass()
+        self.data_generator.generate_data()
+        self.X_test, self.Y_test = self.data_generator.randomly_split_data(5/6)
 
-    def train_and_test(self, model: MLP = None, regularization=0.001, epochs=30000, study_rate=0.001, is_plot=True):
+    def train_and_test(self, model: MLP = None, regularization=0.001, epochs=30000, study_rate=0.001, is_plot=True, train_percentage=0.8):
         if model is None:
             model = MLP()
-        losses = train(model, torch.tensor(self.X_train).float(), torch.tensor(self.Y_train).float(),
-                       torch.tensor(self.X_val).float(), torch.tensor(self.Y_val).float(), epochs, study_rate,
+        X_val, Y_val = self.data_generator.randomly_split_data(train_percentage)
+        X_train, Y_train = self.data_generator.data
+        losses = train(model, torch.tensor(X_train).float(), torch.tensor(Y_train).float(),
+                       torch.tensor(X_val).float(), torch.tensor(Y_val).float(), epochs, study_rate,
                        regularization, msg=False)
         if is_plot:
             plot_loss(losses)
-        accuracy = test_model(model, torch.tensor(self.X_test).float(), torch.tensor(self.Y_test).float())
+        accuracy = test(model, torch.tensor(self.X_test).float(), torch.tensor(self.Y_test).float())
         return losses, accuracy
 
     def test(self):
@@ -98,7 +112,7 @@ class Test(unittest.TestCase):
 
     def test_dim_cases(self):
         losses = []
-        accuracies = []
+        test_losses = []
         n1 = [3, 4, 5]
         n2 = [2, 4, 6]
         for h1 in n1:
@@ -106,6 +120,22 @@ class Test(unittest.TestCase):
                 print(f'Testing with h1={h1}, h2={h2}')
                 loss, accuracy = self.train_and_test(MLP(h1, h2), is_plot=False)
                 losses.append(loss)
-                accuracies.append(accuracy)
+                test_losses.append(accuracy)
         plot_losses(losses, ' - Hidden Dimension', 'line ')
-        graph_matrix(accuracies, n1, n2)
+        graph_matrix(test_losses, n1, n2)
+
+    def test_gaussian_noise(self):
+        losses = []
+        test_losses = []
+        n2 = [2, 6, 9]
+        noice = [0.05, 0.15]
+        for n in noice:
+            for h2 in n2:
+                print(f'Testing with noise={n}, h2={h2}')
+                self.data_generator.generate_data()
+                self.data_generator.add_gaussian_noise(std=n)
+                loss, accuracy = self.train_and_test(MLP(h2=h2), is_plot=False)
+                losses.append(loss)
+                test_losses.append(accuracy)
+        plot_losses(losses, ' - Gaussian Noise', 'line ')
+        graph_matrix(test_losses, noice, n2, 'Noise Standard Deviation', 'n2 (Number of Nodes in Second Layer)', 'Test Loss for Different Noise Levels (Noise vs n2)')

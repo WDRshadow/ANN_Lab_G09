@@ -198,8 +198,9 @@ class MackeyGlass:
         self.beta = beta
         self.gamma = gamma
         self.tau = tau
+        self.data = None
 
-    def generate_mackey_glass(self):
+    def _generate_mackey_glass(self):
         x = np.zeros(self.n)
         x[0] = 1.5
         for i in range(1, self.n):
@@ -208,11 +209,25 @@ class MackeyGlass:
         return x
 
     def generate_data(self, f=301, t=1500, s=5, d=20):
-        X = self.generate_mackey_glass()
+        X = self._generate_mackey_glass()
         t = np.arange(f, t + 1)
         inputs = [X[i - d: i: s] for i in t]
         outputs = [X[i + s] for i in t]
-        return np.array(inputs), np.array(outputs)
+        self.data = np.array(inputs), np.array(outputs)
+
+    def add_gaussian_noise(self, mean=0, std=0.05):
+        self.data = self.data[0], self.data[1] + np.random.normal(mean, std, len(self.data[1]))
+        return self.data
+
+    def randomly_split_data(self, percentage=0.8):
+        n = int(len(self.data[0]) * percentage)
+        data = np.hstack([self.data[0], self.data[1].reshape(-1, 1)])
+        np.random.shuffle(data)
+        data_train = data[:n]
+        data_val = data[n:]
+        self.data = np.hsplit(data_train, [4])
+        X_val, Y_val = np.hsplit(data_val, [4])
+        return X_val, Y_val
 
 
 class GaussFunctionData:
@@ -263,9 +278,9 @@ class Test(unittest.TestCase):
 
     def test_3(self):
         mackey_glass = MackeyGlass()
-        inputs, outputs = mackey_glass.generate_data()
-        self.assertEqual(inputs.shape, (1200, 4))
-        self.assertEqual(outputs.shape, (1200,))
+        mackey_glass.generate_data()
+        self.assertEqual(mackey_glass.data[0].shape, (1200, 4))
+        self.assertEqual(mackey_glass.data[1].shape, (1200,))
 
     def test_1_25_each(self):
         data_generator = DataGenerator()
@@ -288,6 +303,6 @@ class Test(unittest.TestCase):
         print(points)
         data_generator.plot()
 
-    def test_gauss(self):
+    def test_4(self):
         gauss = GaussFunctionData()
         gauss.plot()

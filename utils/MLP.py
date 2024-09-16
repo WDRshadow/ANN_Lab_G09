@@ -51,10 +51,10 @@ class MLP:
         for i, layer in enumerate(reversed(self.layers)):
             index = len(self.layers) - i - 1
             if index == 0:
-                # (O - Y) * f'(O*)
+                # delta = (O - Y) * f'(O*)
                 delta = layer.backward(dO, X, self.study_rate)
             else:
-                # (V^T*delta) * f'(H*)
+                # delta = (V^T*delta) * f'(H*)
                 delta = layer.backward(dO, Os[index - 1], self.study_rate)
             dO = np.dot(delta, layer.W.T)[:, :-1]
 
@@ -71,9 +71,9 @@ class MLP:
 
     def test(self, X: np.ndarray, Y: np.ndarray):
         O = self.forward(X)
-        accuracy = 1 - np.mean(np.abs(O - Y))
-        print(f"Accuracy: {accuracy}")
-        return accuracy
+        test_loss = np.mean(np.square(O - Y))
+        print(f'Test Loss: {test_loss}')
+        return test_loss
 
 
 class Layer:
