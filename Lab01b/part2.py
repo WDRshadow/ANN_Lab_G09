@@ -127,7 +127,7 @@ class Test(unittest.TestCase):
                 losses.append(train_loss)
                 test_losses.append(test_loss)
                 val_test_losses.append(val_loss[-1])
-                order_refference.append(f'n1:{h1} & n2:{h2}')
+                order_refference.append(f'dim {h1}x{h2}')
         plot_losses(losses, ' - Hidden Dimension', order_refference)
         graph_matrix(val_test_losses, n1, n2, 
                      title='Validation Error for Different Node Combinations (n1 vs n2)')
@@ -137,17 +137,24 @@ class Test(unittest.TestCase):
     def test_training_percentage_case(self):
         losses = []
         test_losses = []
+        val_losses = []
         percentages = [0.2, 0.4, 0.6, 0.8]
         for p in percentages:
             print(f'Testing with training percentage={p}')
-            train_loss, test_loss, _ = self.train_and_test(train_percentage=p, is_plot=False)
+            train_loss, test_loss, val_loss = self.train_and_test(train_percentage=p, is_plot=False)
             losses.append(train_loss)
             test_losses.append(test_loss)
-        plot_losses(losses, ' - Training Percentage', 'line ')
+            val_losses.append(val_loss)
+        formatted_percentages = [f"{int(p * 100)}% training data" for p in percentages]
+        plot_losses(test_losses, ' - Test Error for Training Percentages', formatted_percentages)
+        plot_losses(val_losses, ' - Validation Error for Training Percentage', formatted_percentages)
 
-    def test_gaussian_noise(self):
+
+    def test_gaussian_noise(self, regularization=0.001):
         losses = []
         test_losses = []
+        val_losses_all = []
+        val_losses = []
         order_refference = []
         n2 = [3, 6, 9]
         noise = [0.05, 0.15]
@@ -156,9 +163,19 @@ class Test(unittest.TestCase):
             self.data_generator.add_gaussian_noise(std=n)
             for h2 in n2:
                 print(f'Testing with noise={n}, h2={h2}')
-                train_loss, test_loss, validation_loss = self.train_and_test(MLP(h2=h2), is_plot=False)
+                train_loss, test_loss, validation_loss = self.train_and_test(MLP(h2=h2), is_plot=False, regularization=regularization)
                 losses.append(train_loss)
                 test_losses.append(test_loss)
-                order_refference.append(f'n:{n2} & noise:{noise}')
-        plot_losses(losses, ' - Gaussian Noise', 'line ')
-        graph_matrix(test_losses, noise, n2, 'Noise Standard Deviation', 'n2 (Number of Nodes in Second Layer)', 'Test Loss for Different Noise Levels (Noise vs n2)')
+                val_losses.append(validation_loss[-1])
+                val_losses_all.append(validation_loss)
+                order_refference.append(f'n:{h2} & noise:{n}')
+        plot_losses(losses, ' - Training Error for Gaussian Noise', order_refference)
+        plot_losses(val_losses_all, ' - Validation Error for Gaussian Noise', order_refference)
+        graph_matrix(test_losses, noise, n2, 
+                     'Noise Standard Deviation', 
+                     'n2 (Number of Nodes in Second Layer)', 
+                     'Test Loss for Different Noise Levels (Noise vs n2)')
+        graph_matrix(val_losses, noise, n2, 
+                    'Noise Standard Deviation', 
+                     'n2 (Number of Nodes in Second Layer)', 
+                     title='Validation Error for Different Noise Levels (Noise vs n2)')
