@@ -124,7 +124,7 @@ class Test(unittest.TestCase):
     def test_gauss(self):
         self.data_generator = GaussFunctionData()
         self.data_generator.plot()
-        X_val, Y_val = self.data_generator.randomly_remove_data(0.3)
+        X_val, Y_val = self.data_generator.randomly_pop_data(0.3)
         self.data_generator.reset_data()
         mlp = DLP(2, 1, study_rate=self.study_rate, epochs=self.epochs)
         self.train_and_test(X_val, Y_val, ' - Gauss Function Data', mlp, False)
@@ -156,3 +156,10 @@ class Test(unittest.TestCase):
         losses.append(encoder.train(X, X))
         encoder.test(X_val, X_val)
         plot_losses(losses, ' - Encoder', 'Case = ')
+
+    def test_random_initial_weights(self):
+        X_val, Y_val = self.data_generator.randomly_remove_data(0.3, 0.3)
+        losses = []
+        for i in range(10):
+            losses.append(self.train_and_test(X_val, Y_val, is_plot=False, is_plot_loss=False))
+        plot_losses(losses, ' - Random initial weights', 'Case = ')

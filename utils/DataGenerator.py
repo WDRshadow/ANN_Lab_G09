@@ -4,17 +4,50 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 
-class DataGenerator:
-    """
-    Data generator for the perceptron learning algorithm
+class DataGeneratorBase:
+    def __init__(self):
+        self.n = None
+        self.data = None
+        self.data_copy = None
 
-    Properties:
-        data (np.ndarray): the data points and their labels
-    """
+    def randomly_mix_data(self):
+        data = np.hstack([self.data[0], self.data[1]])
+        np.random.shuffle(data)
+        X, labels = np.hsplit(data, [self.data[0].shape[1]])
+        self.data = X, labels
 
+    def randomly_pop_data(self, percentage=0.8, is_permanent=False):
+        data = np.hstack([self.data[0], self.data[1]])
+        np.random.shuffle(data)
+        n = int(len(data) * (1 - percentage))
+        data_new = data[:n]
+        X, labels = np.hsplit(data_new, [self.data[0].shape[1]])
+        self.data = X, labels
+        if is_permanent:
+            self.data_copy = (self.data[0].copy(), self.data[1].copy())
+        removed_data = data[n:]
+        return np.hsplit(removed_data, [self.data[0].shape[1]])
+
+    def add_gaussian_noise(self, mean=0, std=0.05, is_permanent=False):
+        self.data = self.data[0], self.data[1] + np.random.normal(mean, std, len(self.data[1])).reshape(-1, 1)
+        if not is_permanent:
+            self.data_copy = (self.data[0].copy(), self.data[1].copy())
+        return self.data
+
+    def reset_data(self):
+        self.data = self.data_copy
+
+    def plot(self):
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.plot_surface(self.data[0][0], self.data[0][1], self.data[1], cmap='viridis')
+        plt.show()
+
+
+class DataGenerator(DataGeneratorBase):
     def __init__(self, n=100, mA=None, sigmaA=0.2, mB=None, sigmaB=0.3):
+        super().__init__()
         self.n = n
-
         if mA is None:
             mA = [1.0, 0.5]
         if mB is None:
@@ -23,10 +56,9 @@ class DataGenerator:
         self.sigmaA = sigmaA
         self.mB = mB
         self.sigmaB = sigmaB
-
         self.data = self._generate_data()
         self.data_copy = (self.data[0].copy(), self.data[1].copy())
-        self._randomly_mix_data()
+        self.randomly_mix_data()
 
     @staticmethod
     def _generate_array(n, mean, sigma) -> np.ndarray:
@@ -55,17 +87,6 @@ class DataGenerator:
         labels = np.vstack((labelsA, labelsB))
 
         return data, labels
-
-    def _randomly_mix_data(self):
-        data = np.hstack([self.data[0], self.data[1]])
-
-        # Randomly mix the data points and their labels
-        np.random.shuffle(data)
-
-        # Split the data points and their labels
-        coords, labels = np.hsplit(data, [2])
-
-        self.data = coords, labels
 
     def _get_class_data(self):
         data = np.hstack([self.data_copy[0], self.data_copy[1]])
@@ -96,7 +117,7 @@ class DataGenerator:
         # separate the data points and their labels
         coords, labels = np.hsplit(data, [2])
         self.data = coords, labels
-        self._randomly_mix_data()
+        self.randomly_mix_data()
         # collect the removed data points
         removed_data_A = data_A[n_A:]
         removed_data_B = data_B[n_B:]
@@ -126,22 +147,12 @@ class DataGenerator:
         # separate the data points and their labels
         coords, labels = np.hsplit(data, [2])
         self.data = coords, labels
-        self._randomly_mix_data()
+        self.randomly_mix_data()
         # collect the removed data points
         removed_data_A = np.vstack([data_A_low[n_A:], data_A_high[n_A:]])
         return np.hsplit(removed_data_A, [2])
 
-    def reset_data(self):
-        """
-        Reset the data to the original data
-        """
-        self.data = self.data_copy
-        self._randomly_mix_data()
-
     def plot(self):
-        """
-        Plot the generated data
-        """
         fig, ax = plt.subplots()
 
         labels = self.data[1].flatten()
@@ -192,13 +203,13 @@ class DataGenerator2(DataGenerator):
         return data_A, data_B
 
 
-class MackeyGlass:
+class MackeyGlass(DataGeneratorBase):
     def __init__(self, n=1506, beta=0.2, gamma=0.1, tau=25):
+        super().__init__()
         self.n = n
         self.beta = beta
         self.gamma = gamma
         self.tau = tau
-        self.data = None
 
     def _generate_mackey_glass(self):
         x = np.zeros(self.n)
@@ -213,25 +224,14 @@ class MackeyGlass:
         t = np.arange(f, t + 1)
         inputs = [X[i - d: i: s] for i in t]
         outputs = [X[i + s] for i in t]
-        self.data = np.array(inputs), np.array(outputs)
-
-    def add_gaussian_noise(self, mean=0, std=0.05):
-        self.data = self.data[0], self.data[1] + np.random.normal(mean, std, len(self.data[1]))
-        return self.data
-
-    def randomly_split_data(self, percentage=0.8):
-        n = int(len(self.data[0]) * percentage)
-        data = np.hstack([self.data[0], self.data[1].reshape(-1, 1)])
-        np.random.shuffle(data)
-        data_train = data[:n]
-        data_val = data[n:]
-        self.data = np.hsplit(data_train, [4])
-        X_val, Y_val = np.hsplit(data_val, [4])
-        return X_val, Y_val
+        outputs = np.array(outputs).reshape(-1, 1)
+        self.data = np.array(inputs), outputs
+        self.data_copy = (self.data[0].copy(), self.data[1].copy())
 
 
-class GaussFunctionData:
+class GaussFunctionData(DataGeneratorBase):
     def __init__(self, x=(-5, 5, 0.5), y=(-5, 5, 0.5)):
+        super().__init__()
         self.X, self.Y = np.meshgrid(np.arange(x[0], x[1], x[2]), np.arange(y[0], y[1], y[2]))
         self.Z = self.gauss_function(self.X, self.Y)
         self.data = np.hstack([self.X.reshape(-1, 1), self.Y.reshape(-1, 1)]), self.Z.reshape(-1, 1)
@@ -240,25 +240,6 @@ class GaussFunctionData:
     @staticmethod
     def gauss_function(x, y):
         return np.exp(-(x ** 2 + y ** 2) / 10) - 0.5
-
-    def randomly_mix_data(self):
-        data = np.hstack([self.data[0], self.data[1]])
-        np.random.shuffle(data)
-        coords, labels = np.hsplit(data, [2])
-        self.data = coords, labels
-
-    def randomly_remove_data(self, perc):
-        data = np.hstack([self.data[0], self.data[1]])
-        np.random.shuffle(data)
-        n = int(len(data) * (1 - perc))
-        data_new = data[:n]
-        coords, labels = np.hsplit(data_new, [2])
-        self.data = coords, labels
-        removed_data = data[n:]
-        return np.hsplit(removed_data, [2])
-
-    def reset_data(self):
-        self.data = self.data_copy
 
     def plot(self):
         fig = plt.figure()
@@ -276,11 +257,15 @@ class Test(unittest.TestCase):
         data_generator = DataGenerator2()
         data_generator.plot()
 
-    def test_3(self):
+    def test_mackey_glass(self):
         mackey_glass = MackeyGlass()
         mackey_glass.generate_data()
         self.assertEqual(mackey_glass.data[0].shape, (1200, 4))
-        self.assertEqual(mackey_glass.data[1].shape, (1200,))
+        self.assertEqual(mackey_glass.data[1].shape, (1200,1))
+
+    def test_gauss(self):
+        gauss = GaussFunctionData()
+        gauss.plot()
 
     def test_1_25_each(self):
         data_generator = DataGenerator()
@@ -302,7 +287,3 @@ class Test(unittest.TestCase):
         points = data_generator.randomly_remove_specific_data()
         print(points)
         data_generator.plot()
-
-    def test_4(self):
-        gauss = GaussFunctionData()
-        gauss.plot()

@@ -92,12 +92,13 @@ class Test(unittest.TestCase):
         super(Test, self).__init__(*args, **kwargs)
         self.data_generator = MackeyGlass()
         self.data_generator.generate_data()
-        self.X_test, self.Y_test = self.data_generator.randomly_split_data(5/6)
+        self.X_test, self.Y_test = self.data_generator.randomly_pop_data(1/6, is_permanent=True)
 
     def train_and_test(self, model: MLP = None, regularization=0.001, epochs=30000, study_rate=0.001, is_plot=True, train_percentage=0.8):
         if model is None:
             model = MLP()
-        X_val, Y_val = self.data_generator.randomly_split_data(train_percentage)
+        self.data_generator.reset_data()
+        X_val, Y_val = self.data_generator.randomly_pop_data(1 - train_percentage)
         X_train, Y_train = self.data_generator.data
         losses = train(model, torch.tensor(X_train).float(), torch.tensor(Y_train).float(),
                        torch.tensor(X_val).float(), torch.tensor(Y_val).float(), epochs, study_rate,
@@ -130,10 +131,10 @@ class Test(unittest.TestCase):
         n2 = [2, 6, 9]
         noice = [0.05, 0.15]
         for n in noice:
+            self.data_generator.reset_data()
+            self.data_generator.add_gaussian_noise(std=n)
             for h2 in n2:
                 print(f'Testing with noise={n}, h2={h2}')
-                self.data_generator.generate_data()
-                self.data_generator.add_gaussian_noise(std=n)
                 loss, accuracy = self.train_and_test(MLP(h2=h2), is_plot=False)
                 losses.append(loss)
                 test_losses.append(accuracy)
