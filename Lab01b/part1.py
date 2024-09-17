@@ -140,6 +140,17 @@ class Test(unittest.TestCase):
         self.data_generator.Z = pred.reshape(self.data_generator.Z.shape)
         self.data_generator.plot()
 
+    def test_gauss_different_percentage(self):
+        perc = [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+        self.data_generator = GaussFunctionData()
+        losses = []
+        for p in perc:
+            self.data_generator.reset_data()
+            X_val, Y_val = self.data_generator.randomly_pop_data(1 - p)
+            mlp = DLP(2, 1, study_rate=self.study_rate, epochs=self.epochs)
+            losses.append(self.train_and_test(X_val, Y_val, f' - Gauss Function Data with {p} data for training', mlp, False, is_plot_loss=False))
+        plot_losses(losses, ' - Gauss Function Data with Different Percentage', 'Percentage = 0.1 + 0.1 * ')
+
     def test_encoder(self):
         # randomly generate data with 1 dimension in range 0-7 with type int
         X = np.random.randint(0, 7, (300, 1))
