@@ -30,7 +30,7 @@ class DataGeneratorBase:
 
     def add_gaussian_noise(self, mean=0, std=0.05, is_permanent=False):
         self.data = self.data[0], self.data[1] + np.random.normal(mean, std, len(self.data[1])).reshape(-1, 1)
-        if not is_permanent:
+        if is_permanent:
             self.data_copy = (self.data[0].copy(), self.data[1].copy())
         return self.data
 
