@@ -14,13 +14,13 @@ class ActivationFunction:
 class Sigmoid(ActivationFunction):
     @staticmethod
     def forward(x):
-        # for each element in x, if x >= 8, return 1, if x < -8, return -1, else return 2 / (1 + exp(-x)) - 1
-        return np.where(x >= 8, 1, np.where(x < -8, -1, 2 / (1 + np.exp(-x)) - 1))
+        # for each element in x, if x >= 8, return 1, if x < -8, return 0, else return 1 / (1 + np.exp(-x))
+        return np.where(x >= 8, 1, np.where(x < -8, -1, 1 / (1 + np.exp(-x))))
 
     @staticmethod
     def derivative(x):
         phi = Sigmoid.forward(x)
-        return 0.5 * (1 + phi) * (1 - phi)
+        return phi * (1 - phi)
 
 
 class ReLU(ActivationFunction):

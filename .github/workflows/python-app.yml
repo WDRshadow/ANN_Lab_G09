@@ -22,7 +22,7 @@ jobs:
 
     - name: Run tests
       run: |
-        python -m unittest discover -s utils -p "DataGenerator.py"
         python -m unittest Lab01a/Lab01a.py
         python -m unittest Lab01b/part1.py
         python -m unittest Lab01b/part2.py
+        python -m unittest Lab02/part1.py

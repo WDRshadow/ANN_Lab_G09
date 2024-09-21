@@ -16,7 +16,7 @@ class DataGeneratorBase:
         X, labels = np.hsplit(data, [self.data[0].shape[1]])
         self.data = X, labels
 
-    def randomly_pop_data(self, percentage=0.8, is_permanent=False):
+    def randomly_pop_data(self, percentage=0.2, is_permanent=False):
         data = np.hstack([self.data[0], self.data[1]])
         np.random.shuffle(data)
         n = int(len(data) * (1 - percentage))
@@ -29,7 +29,7 @@ class DataGeneratorBase:
         return np.hsplit(removed_data, [self.data[0].shape[1]])
 
     def add_gaussian_noise(self, mean=0, std=0.05, is_permanent=False):
-        self.data = self.data[0], self.data[1] + np.random.normal(mean, std, len(self.data[1])).reshape(-1, 1)
+        self.data = self.data[0], self.data[1] + np.random.normal(mean, std, size=self.data[1].shape)
         if is_permanent:
             self.data_copy = (self.data[0].copy(), self.data[1].copy())
         return self.data
@@ -248,6 +248,20 @@ class GaussFunctionData(DataGeneratorBase):
         plt.show()
 
 
+class One_Dim_Function(DataGeneratorBase):
+    def __init__(self, f: float = 0, t: float = 2 * np.pi, num: int = 100, function: callable = lambda x: np.sin(x)):
+        super().__init__()
+        self.f = function
+        X = np.linspace(f, t, num).reshape(-1, 1)
+        Y = self.f(X)
+        self.data = np.hstack([X.reshape(-1, 1)]), Y.reshape(-1, 1)
+        self.data_copy = (self.data[0].copy(), self.data[1].copy())
+
+    def plot(self):
+        plt.plot(self.data[0], self.data[1])
+        plt.show()
+
+
 class Test(unittest.TestCase):
     def test_1(self):
         data_generator = DataGenerator()
@@ -261,7 +275,7 @@ class Test(unittest.TestCase):
         mackey_glass = MackeyGlass()
         mackey_glass.generate_data()
         self.assertEqual(mackey_glass.data[0].shape, (1200, 4))
-        self.assertEqual(mackey_glass.data[1].shape, (1200,1))
+        self.assertEqual(mackey_glass.data[1].shape, (1200, 1))
 
     def test_gauss(self):
         gauss = GaussFunctionData()
@@ -286,4 +300,8 @@ class Test(unittest.TestCase):
         data_generator.plot()
         points = data_generator.randomly_remove_specific_data()
         print(points)
+        data_generator.plot()
+
+    def test_f(self):
+        data_generator = One_Dim_Function(function=lambda x: x ** 2)
         data_generator.plot()
