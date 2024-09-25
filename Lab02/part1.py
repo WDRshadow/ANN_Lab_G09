@@ -33,11 +33,13 @@ class Test(unittest.TestCase):
             centers = np.linspace(data_generator.data[0][0], data_generator.data[0][-1], rbf_unit).reshape(-1, 1)
             model.set_C_n_Sigma(centers, np.array([sigma] * rbf_unit))
             model.backward(X_train, y_train)
-        data_generator.reset_data()
         model.test(data_generator.data[0], data_generator.data[1])
+        if competitive_learning:
+            data_generator.reset_data()
         if is_plot:
             y_pred = model(data_generator.data[0])
             plot_two_lines(data_generator.data[0], data_generator.data[1], y_pred, plot_title)
+        data_generator.reset_data()
 
     def test_sin_2x(self):
         rbf_unit, sigma = 10, 1.0
@@ -63,7 +65,7 @@ class Test(unittest.TestCase):
 
     def test_square_2x_gaussian(self):
         rbf_unit, sigma = 50, 2.0
-        self.data_generator_square2x.add_gaussian_noise(0, 0.1)
+        self.data_generator_square2x.add_gaussian_noise(0, 100)
         rbf_net = RBF(input_dim=1, rbf_dim=rbf_unit)
         self._test(self.data_generator_square2x, rbf_net, rbf_unit, sigma, plot_title='2x^2 with Gaussian noise')
 
