@@ -20,9 +20,10 @@ class Lab02Part2DataGenerator:
         self.mpsex: np.ndarray = Read_Files("data_lab2/mpsex.dat").read_matrix(" ", type_=int).T.reshape(-1)
         self.votes: np.ndarray = Read_Files("data_lab2/votes.dat").read_one_line(type_=float)
 
+data_set = Lab02Part2DataGenerator()
 
 def animal_ordering():
-    data = np.loadtxt('./Lab02/P2Data/animals.dat', delimiter=",", dtype=int)
+    data = np.loadtxt('./Lab02/data_lab2/animals.dat', delimiter=",", dtype=int)
     data = np.reshape(data, (32, 84))
 
     # 100x1 grid, 20 epochs, 0.2 learning rate
@@ -33,7 +34,7 @@ def animal_ordering():
     som = SOM(grid_size_m, grid_size_n, 84, learning_rate, sigma_0=10)
     som.train(data, epochs=20)
 
-    names = np.loadtxt('./Lab02/P2Data/animalnames.txt', dtype=str)
+    names = np.loadtxt('./Lab02/data_lab2/animalnames.txt', dtype=str)
     for i, name in enumerate(names):
         names[i] = name[1:-1]
 
@@ -70,7 +71,7 @@ def animal_ordering():
 
 
 def cyclic_tour():
-    with open('./Lab02/P2Data/cities.dat', 'r') as file:
+    with open('./Lab02/data_lab2/cities.dat', 'r') as file:
         content = file.read().replace(';', '\n')
 
     data = np.loadtxt(content.splitlines(), delimiter=",", dtype=float, skiprows=3)
