@@ -262,6 +262,46 @@ class One_Dim_Function(DataGeneratorBase):
         plt.show()
 
 
+class Read_Files:
+    def __init__(self, file_path, exclude_lines="%", encoding="utf-8"):
+        self.path = None
+        self._lines = self._read_file_lines(file_path, exclude_lines, encoding=encoding)
+        self.data = None
+
+    @staticmethod
+    def _read_file_lines(file_path, exclude_lines="%", encoding=None) -> list[str]:
+        with open(file_path, "r", encoding=encoding) as file:
+            lines = file.readlines()
+        # remove '\n' from the end of each line
+        lines = [line.strip() for line in lines]
+        # remove blank lines
+        lines = [line for line in lines if line]
+        return [line for line in lines if not line.startswith(exclude_lines)]
+
+    @staticmethod
+    def _read_one_line(line: str, delimiter=",", delimiter2=None) -> list[str]:
+        if delimiter2:
+            line = line.replace(delimiter2, delimiter)
+        strs = line.split(delimiter)
+        for s in strs:
+            s.strip()
+            if s == "":
+                strs.remove(s)
+        return strs
+
+    def read_matrix(self, delimiter=",", delimiter2=None, type_=float) -> np.ndarray:
+        self.data = [self._read_one_line(line, delimiter, delimiter2) for line in self._lines]
+        self.data = np.array(self.data, dtype=type_)
+        return self.data
+
+    def read_one_line(self, delimiter=",", delimiter2= None, index=1, type_=float) -> np.ndarray:
+        return self.read_matrix(delimiter, delimiter2, type_=type_)[index - 1]
+
+    def read_lines(self, remove_wrap=None):
+        if remove_wrap:
+            self._lines = [line.strip(remove_wrap) for line in self._lines]
+        return self._lines
+
 class Test(unittest.TestCase):
     def test_1(self):
         data_generator = DataGenerator()
@@ -305,3 +345,17 @@ class Test(unittest.TestCase):
     def test_f(self):
         data_generator = One_Dim_Function(function=lambda x: x ** 2)
         data_generator.plot()
+
+    def test_read_lines(self):
+        read_files = Read_Files("../Lab02/data_lab2/animalnames.txt")
+        print(read_files.read_lines("'"))
+
+    def test_read_one_line(self):
+        read_files = Read_Files("../Lab02/data_lab2/animals.dat")
+        print(read_files.read_one_line(","))
+
+    def test_read_matrix(self):
+        read_files = Read_Files("../Lab02/data_lab2/ballist.dat")
+        print(read_files.read_matrix(" ", "\t"))
+        read_files = Read_Files("../Lab02/data_lab2/cities.dat")
+        print(read_files.read_matrix(",", ";"))
