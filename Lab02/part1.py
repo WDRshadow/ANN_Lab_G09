@@ -3,7 +3,7 @@ import unittest
 import matplotlib.pyplot as plt
 import numpy as np
 
-from utils import RBF, One_Dim_Function
+from utils import RBF, One_Dim_Function, Read_Files
 
 
 def plot_two_lines(X, Y_train, Y_pred, plot_title=''):
@@ -20,6 +20,8 @@ class Test(unittest.TestCase):
         self.samples = 100
         self.data_generator_sin2x = One_Dim_Function(0, 2 * np.pi, self.samples, function=lambda x: np.sin(2 * x))
         self.data_generator_square2x = One_Dim_Function(-50, 50, self.samples, function=lambda x: (2 * x) ** 2)
+        self.ballist: np.ndarray = Read_Files("data_lab2/ballist.dat").read_matrix(" ", "\t", float)
+        self.balltest: np.ndarray = Read_Files("data_lab2/balltest.dat").read_matrix(" ", "\t", float)
 
     @staticmethod
     def _test(data_generator: One_Dim_Function, model: RBF, rbf_unit=10, sigma=1.0, competitive_learning=False,
@@ -74,3 +76,13 @@ class Test(unittest.TestCase):
         # set initial sigma to 2.0
         rbf_net.layers[0].Sigma = np.array([2.0] * rbf_unit)
         self._test(self.data_generator_square2x, rbf_net, competitive_learning=True, plot_title='2x^2 with Competitive Learning')
+
+    def test_2_dim_function(self):
+        rbf_unit, sigma = 10, 1.0
+        X_train = self.ballist[:, 0:2]
+        y_train = self.ballist[:, 2:4]
+        X_test = self.balltest[:, 0:2]
+        y_test = self.balltest[:, 2:4]
+        rbf_net = RBF(input_dim=2, rbf_dim=rbf_unit)
+        rbf_net.train(X_train, y_train)
+        rbf_net.test(X_test, y_test)

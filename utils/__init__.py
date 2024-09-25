@@ -3,4 +3,4 @@ from .DataGenerator import DataGenerator, DataGenerator2, MackeyGlass, GaussFunc
 from .MLP import MLP, Layer
 from .RBF import RBF
 from .SLP import SingleLevelPerceptron, PerceptronLearning, DeltaRuleLearning
-from .SOM import SOM
+from .SOM import SOM_2D
