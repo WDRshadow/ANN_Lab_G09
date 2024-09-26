@@ -35,11 +35,11 @@ class RBF_Delta_Rule(RBF):
     def backward(self, X: np.ndarray, Y: np.ndarray):
         if self.batch_mode:
             X_ = self.layers[0].forward(X)
+            X_ = np.insert(X_, X_.shape[1], 1, axis=1)
             for i in range(self.epochs):
                 y_pred = self.forward(X)
                 dO = Y - y_pred
-                dO_X = np.dot(dO.T, X_).T
-                self.layers[1].W += self.study_rate * dO_X
+                self.layers[1].W += self.study_rate * np.dot(X.T,dO)
         else:
             for i in range(self.epochs):
                 for i, x in enumerate(X):

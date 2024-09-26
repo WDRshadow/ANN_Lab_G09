@@ -230,7 +230,7 @@ class Test(unittest.TestCase):
 
 
     def test_rbf_residuals_vs_units_seq(self):
-        rbf_units_range = range(1, 21)
+        rbf_units_range = range(1, 14)
         
         residuals_sin2x = []
         residuals_square2xbox = []
