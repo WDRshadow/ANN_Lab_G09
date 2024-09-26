@@ -26,3 +26,4 @@ jobs:
         python -m unittest Lab01b/part1.py
         python -m unittest Lab01b/part2.py
         python -m unittest Lab02/part1.py
+        python -m unittest Lab02/part2.py
