@@ -88,3 +88,6 @@ class Test(unittest.TestCase):
         rbf_net = RBF(input_dim=2, rbf_dim=rbf_unit)
         rbf_net.train(X_train, y_train)
         rbf_net.test(X_test, y_test)
+        y_pred = rbf_net(X_test)
+        plot_two_lines(np.arange(y_test.shape[0]), y_test[:, 0], y_pred[:, 0], plot_title='Ballist Distance')
+        plot_two_lines(np.arange(y_test.shape[0]), y_test[:, 1], y_pred[:, 1], plot_title='Ballist Height')
