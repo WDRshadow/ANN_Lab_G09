@@ -9,7 +9,7 @@ from collections import defaultdict
 
 class Lab02Part2DataGenerator:
     def __init__(self):
-        base_path = "/data_lab2"
+        base_path = "data_lab2"
 
         self.animalattributes: list[str] = Read_Files(base_path + "/animalattributes.txt").read_lines()
         self.animalnames: list[str] = Read_Files(base_path + "/animalnames.txt").read_lines("'")
@@ -31,7 +31,7 @@ def animal_ordering():
     grid_size_n = 1
     learning_rate = 0.2
 
-    som = SOM_2D(grid_size_m, grid_size_n, 84, learning_rate, sigma_0=10)
+    som = SOM_2D(grid_size_m, grid_size_n, 84, learning_rate, sigma_0=16.67)
     som.train(data, epochs=20)
 
     names = np.loadtxt('data_lab2/animalnames.txt', dtype=str)
@@ -140,7 +140,7 @@ class TestSOM(unittest.TestCase):
 
         # 3*sigma = 2
         som = SOM_cycle(10, 2, 0.3, 0.67)
-        som.train(city_pos, epochs=20)
+        som.train(city_pos, epochs=400)
         map_index = som.map_vecs(city_pos)
         map_index[:, 1] = np.arange(10)
         map_index = map_index.tolist()

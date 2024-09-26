@@ -23,8 +23,8 @@ class Test(unittest.TestCase):
         self.data_generator_square2x = One_Dim_Function(0, 10, self.samples, function=lambda x: (2 * x) ** 2)
         self.data_generator_square2xbox = One_Dim_Function(0, 2 * np.pi, self.samples, function=lambda x: np.where(np.sin(x) >= 0, 1, -1))
 
-        self.ballist: np.ndarray = Read_Files("../data_lab2/ballist.dat").read_matrix(" ", "\t", float)
-        self.balltest: np.ndarray = Read_Files("../data_lab2/balltest.dat").read_matrix(" ", "\t", float)
+        self.ballist: np.ndarray = Read_Files("data_lab2/ballist.dat").read_matrix(" ", "\t", float)
+        self.balltest: np.ndarray = Read_Files("data_lab2/balltest.dat").read_matrix(" ", "\t", float)
 
     @staticmethod
     def _test(data_generator: One_Dim_Function, model: RBF, rbf_unit=10, sigma=1.0, competitive_learning=False,
@@ -63,8 +63,8 @@ class Test(unittest.TestCase):
         self.data_generator_square2x.randomly_mix_data()
         rbf_net = RBF(input_dim=1, rbf_dim=rbf_unit)
         rbf_net2 = RBF(input_dim=1, rbf_dim=rbf_unit)
-        self._test(self.data_generator_sin2x, rbf_net, competitive_learning=True, plot_title='sin(2x) with Competitive Learning')
-        self._test(self.data_generator_sin2x, rbf_net2, competitive_learning=True, plot_title='sin(2x) with Competitive Learning', cmode="three")
+        self._test(self.data_generator_sin2x, rbf_net, competitive_learning=True, plot_title='sin(2x) with Competitive Learning with one winner')
+        self._test(self.data_generator_sin2x, rbf_net2, competitive_learning=True, plot_title='sin(2x) with Competitive Learning with three winners', cmode="three")
 
     def test_square_2x(self):
         rbf_unit, sigma = 50, 2.0
@@ -73,19 +73,27 @@ class Test(unittest.TestCase):
 
     def test_square_2x_gaussian(self):
         rbf_unit, sigma = 50, 2.0
-        self.data_generator_square2x.add_gaussian_noise(0, 100)
+        self.data_generator_square2x.add_gaussian_noise(0, 0.1)
         rbf_net = RBF(input_dim=1, rbf_dim=rbf_unit)
-        self._test(self.data_generator_square2x, rbf_net, rbf_unit, sigma, plot_title='2x^2 with Gaussian noise')
+        self._test(self.data_generator_square2xbox, rbf_net, rbf_unit, sigma, plot_title='square(2x) with Gaussian noise')
 
     def test_square_2x_competitive_learning(self):
+        rbf_unit, study_rate, epochs = 10, 0.001, 1000
+        self.data_generator_square2x.randomly_mix_data()
+        rbf_net = RBF(input_dim=1, rbf_dim=rbf_unit)
+        rbf_net2 = RBF(input_dim=1, rbf_dim=rbf_unit)
+        self._test(self.data_generator_square2xbox, rbf_net, competitive_learning=True, plot_title='Square(2x) with Competitive Learning one winner')
+        self._test(self.data_generator_square2xbox, rbf_net2, competitive_learning=True, plot_title='Square(2x) with Competitive Learning three winners', cmode="three")
+
+    def test_2x2_winners_cl(self):
         rbf_unit, study_rate, epochs = 20, 0.001, 100
         self.data_generator_square2x.randomly_mix_data()
         rbf_net = RBF(input_dim=1, rbf_dim=rbf_unit, study_rate=study_rate, epochs=epochs)
         rbf_net2 = RBF(input_dim=1, rbf_dim=rbf_unit, study_rate=study_rate, epochs=epochs)
         # set up random initial C (scale up to 100)
         # set initial sigma to 2.0
-        self._test(self.data_generator_square2x, rbf_net, competitive_learning=True, plot_title='2x^2 with Competitive Learning one winner')
-        self._test(self.data_generator_square2x, rbf_net2, competitive_learning=True, plot_title='2x^2 with Competitive Learning three winners', cmode="three")
+        self._test(self.data_generator_square2x, rbf_net, competitive_learning=True, plot_title='(2x)^2 with Competitive Learning one winner')
+        self._test(self.data_generator_square2x, rbf_net2, competitive_learning=True, plot_title='(2x)^2 with Competitive Learning three winners', cmode="three")
 
     def test_2_dim_function(self):
         rbf_unit, sigma = 10, 1.0
