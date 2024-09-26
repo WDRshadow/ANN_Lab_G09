@@ -212,7 +212,8 @@ class TestSOM(unittest.TestCase):
                                          markersize=10, alpha=0.6)
                     handles.append(handle)
 
-                plt.legend(handles=handles, loc='upper right', fontsize='small', title='Class Types')
+                plt.legend(handles=handles, bbox_to_anchor=(1, 1), loc='upper left', fontsize='small', title='Class Types')
+                plt.tight_layout(rect=[0, 0, 0.97, 1])  # Adjust the right side to make room for legend
             plt.show()
         
         grouped_result_gender = group_results(vote_map, mp_sex)
