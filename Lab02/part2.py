@@ -5,18 +5,21 @@ import numpy as np
 
 from utils import SOM_2D, Read_Files
 
+from collections import defaultdict
 
 class Lab02Part2DataGenerator:
     def __init__(self):
-        self.animalattributes: list[str] = Read_Files("data_lab2/animalattributes.txt").read_lines()
-        self.animalnames: list[str] = Read_Files("data_lab2/animalnames.txt").read_lines("'")
-        self.animals: np.ndarray = Read_Files("data_lab2/animals.dat").read_one_line(type_=int)
-        self.cities: np.ndarray = Read_Files("data_lab2/cities.dat").read_matrix(",", ";", float)
-        self.mpdistrict: np.ndarray = Read_Files("data_lab2/mpdistrict.dat").read_matrix(" ", type_=int).T.reshape(-1)
-        self.mpnames: list[str] = Read_Files("data_lab2/mpnames.txt", encoding="ISO-8859-1").read_lines()
-        self.mpparty: np.ndarray = Read_Files("data_lab2/mpparty.dat").read_matrix(" ", type_=int).T.reshape(-1)
-        self.mpsex: np.ndarray = Read_Files("data_lab2/mpsex.dat").read_matrix(" ", type_=int).T.reshape(-1)
-        self.votes: np.ndarray = Read_Files("data_lab2/votes.dat").read_one_line(type_=float)
+        base_path = "/data_lab2"
+
+        self.animalattributes: list[str] = Read_Files(base_path + "/animalattributes.txt").read_lines()
+        self.animalnames: list[str] = Read_Files(base_path + "/animalnames.txt").read_lines("'")
+        self.animals: np.ndarray = Read_Files(base_path + "/animals.dat").read_one_line(type_=int)
+        self.cities: np.ndarray = Read_Files(base_path + "/cities.dat").read_matrix(",", ";", float)
+        self.mpdistrict: np.ndarray = Read_Files(base_path + "/mpdistrict.dat").read_matrix(" ", type_=int).T.reshape(-1)
+        self.mpnames: list[str] = Read_Files(base_path + "/mpnames.txt", encoding="ISO-8859-1").read_lines()
+        self.mpparty: np.ndarray = Read_Files(base_path + "/mpparty.dat").read_matrix(" ", type_=int).T.reshape(-1)
+        self.mpsex: np.ndarray = Read_Files(base_path + "/mpsex.dat").read_matrix(" ", type_=int).T.reshape(-1)
+        self.votes: np.ndarray = Read_Files(base_path + "/votes.dat").read_one_line(type_=float)
 
 
 def animal_ordering():
@@ -162,34 +165,65 @@ class TestSOM(unittest.TestCase):
         # reshape the vote data to (349 * 31)
         votes = self.data_generator.votes.reshape((349, 31))
         # reshape the mp data to (349 * 3)
-        mp_party = self.data_generator.mpparty.reshape((349, 1))
-        mp_sex = self.data_generator.mpsex.reshape((349, 1))
-        mp_district = self.data_generator.mpdistrict.reshape((349, 1))
+        mp_party = self.data_generator.mpparty.reshape((349, 1)).flatten()
+        mp_sex = self.data_generator.mpsex.reshape((349, 1)).flatten()
+        mp_district = self.data_generator.mpdistrict.reshape((349, 1)).flatten()
 
         # Mapping the votes, with 3*sigma = 2
         vote_som = SOM_2D(10, 10, 31, 0.3, 0.67)
         vote_som.train(votes, epochs=100)
         vote_map = vote_som.map_vecs(votes)
 
-        # plot the votes
-        def plot_votes(mapped, mp_class, title="Mapped Points and Data Points"):
-            """Plot the 2d map of the votes into a graph with points with different colors"""
-            classes = np.unique(mp_class)
-            num_class = len(classes)
+        def group_results(vote_map, group_by):
+            grouped_points = defaultdict(lambda: defaultdict(int))
+
+            for point, party in zip(map(tuple, vote_map), group_by):
+                grouped_points[point][party] += 1
+
+            return {point: dict(grouped_counts) for point, grouped_counts in grouped_points.items()}
+
+        def plot_grouped_result(grouped_result, mp_class, class_names, title="Mapped Points and Data Points"):
+            """Plot the 2D map of the votes into a graph with points with different colors."""
             plt.title(title)
-            for i in range(num_class):
-                class_i = np.where(mp_class == classes[i])[0]
-                plt.scatter(mapped[class_i, 0], mapped[class_i, 1], label=classes[i])
+
+            classes = np.unique(mp_class)
+            class_length = len(classes)
+            colors = plt.get_cmap('plasma', class_length)
+
+            for point, class_counts in grouped_result.items():
+                for index, (class_type, count) in enumerate(class_counts.items()):
+                    color = colors(class_type)
+                    plt.scatter(int(point[0]) - ((len(class_counts) - 1)/2 - index) * (0.5 / (len(class_counts))), 
+                                int(point[1]), 
+                                s=count * 10, 
+                                color=color, 
+                                alpha=0.6)
+
+
             plt.xlabel('X Coordinate')
             plt.ylabel('Y Coordinate')
-            plt.grid(True)
-            if num_class < 5:
-                plt.legend()
-            plt.show()
 
-        plot_votes(vote_map, mp_party, "Party")
-        plot_votes(vote_map, mp_sex, "Gender")
-        plot_votes(vote_map, mp_district, "District")
+            if class_names is not None:
+                handles = []
+                for label in class_names:
+                    # Create a dummy plot to represent the label in the legend
+                    handle = plt.Line2D([0], [0], marker='o', color='w', label=label,
+                                         markerfacecolor=colors(class_names.index(label)),
+                                         markersize=10, alpha=0.6)
+                    handles.append(handle)
+
+                plt.legend(handles=handles, loc='upper right', fontsize='small', title='Class Types')
+            plt.show()
+        
+        grouped_result_gender = group_results(vote_map, mp_sex)
+        grouped_result_party = group_results(vote_map, mp_party)
+        grouped_result_district = group_results(vote_map, mp_district)
+
+        genders=["M", "F"]
+        parties=['no party', 'm', 'fp', 's', 'v', 'mp', 'kd', 'c']
+        plot_grouped_result(grouped_result_gender, mp_sex, class_names=genders, title="SOM Gender Distribution")    
+        plot_grouped_result(grouped_result_party, mp_party, class_names=parties, title="SOM Party Distribution")    
+        plot_grouped_result(grouped_result_district, mp_district, class_names=None, title="SOM District Distribution")    
 
     def test_animals(self):
         animal_ordering()
