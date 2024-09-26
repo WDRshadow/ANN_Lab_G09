@@ -140,7 +140,7 @@ class TestSOM(unittest.TestCase):
 
         # 3*sigma = 2
         som = SOM_cycle(10, 2, 0.3, 0.67)
-        som.train(city_pos, epochs=400)
+        som.train(city_pos, epochs=20)
         map_index = som.map_vecs(city_pos)
         map_index[:, 1] = np.arange(10)
         map_index = map_index.tolist()

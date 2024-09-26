@@ -24,6 +24,30 @@ class RBF(MLP):
         self.layers[0].Sigma = Sigma
 
 
+class RBF_Delta_Rule(RBF):
+    def __init__(self, input_dim: int, rbf_dim: int, mode="b", study_rate=0.001, epochs=1000):
+        super().__init__(input_dim, rbf_dim, study_rate, epochs)
+        self.batch_mode = False if mode == "s" else True
+
+    def backward(self, X: np.ndarray, Y: np.ndarray):
+        if self.batch_mode:
+            X_ = self.layers[0].forward(X)
+            X_ = np.insert(X_, X_.shape[1], 1, axis=1)
+            for i in range(self.epochs):
+                y_pred = self.forward(X)
+                dO = Y - y_pred
+                self.layers[1].W += self.study_rate * np.dot(X.T,dO)
+        else:
+            for i in range(self.epochs):
+                for i, x in enumerate(X):
+                    x = np.array([x])
+                    x_ = self.layers[0].forward(x)
+                    x_ = np.insert(x_, x_.shape[1], 1, axis=1)
+                    y_pred = self.forward(x)
+                    dO = Y[i] - y_pred
+                    self.layers[1].W += self.study_rate * dO * x_.T
+
+
 class RBFLayer(Layer):
     def __init__(self, input_dim: int, output_dim: int):
         super().__init__(input_dim, output_dim)

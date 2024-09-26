@@ -3,7 +3,7 @@ import unittest
 import matplotlib.pyplot as plt
 import numpy as np
 
-from utils import RBF, One_Dim_Function, Read_Files, RBF_seq
+from utils import RBF, One_Dim_Function, Read_Files, RBF_seq, RBF_Delta_Rule
 
 
 def plot_two_lines(X, Y_train, Y_pred, plot_title=''):
@@ -45,7 +45,7 @@ class Test(unittest.TestCase):
         data_generator.reset_data()
 
     def test_sin_2x(self):
-        rbf_unit, sigma = 10, 1.0
+        rbf_unit, sigma = 10, 1.5
         rbf_net = RBF(input_dim=1, rbf_dim=rbf_unit)
         self._test(self.data_generator_sin2x, rbf_net, rbf_unit, sigma, plot_title='sin(2x)')
 
@@ -191,7 +191,7 @@ class Test(unittest.TestCase):
 
 
     def test_rbf_residuals_vs_units_seq(self):
-        rbf_units_range = range(1, 21)
+        rbf_units_range = range(1, 14)
         
         residuals_sin2x = []
         residuals_square2xbox = []
@@ -206,11 +206,13 @@ class Test(unittest.TestCase):
         sin2x_noise_gen.add_gaussian_noise(0, 0.5)
         square2xbox_noise_gen.add_gaussian_noise(0, 0.5)
 
+        s_l, epochs = 0.001, 500
+        mode = "b"
         for rbf_unit in rbf_units_range:
-            rbf_sin2x = RBF_seq.RBF_SEQ(input_dim=1, rbf_dim=rbf_unit)
-            rbf_square2xbox = RBF_seq.RBF_SEQ(input_dim=1, rbf_dim=rbf_unit)
-            rbf_sin2x_noise = RBF_seq.RBF_SEQ(input_dim=1, rbf_dim=rbf_unit)
-            rbf_square2xbox_noise = RBF_seq.RBF_SEQ(input_dim=1, rbf_dim=rbf_unit)
+            rbf_sin2x = RBF_Delta_Rule(input_dim=1, rbf_dim=rbf_unit, study_rate=s_l, epochs=epochs, mode=mode)
+            rbf_square2xbox = RBF_Delta_Rule(input_dim=1, rbf_dim=rbf_unit, study_rate=s_l, epochs=epochs, mode=mode)
+            rbf_sin2x_noise = RBF_Delta_Rule(input_dim=1, rbf_dim=rbf_unit, study_rate=s_l, epochs=epochs, mode=mode)
+            rbf_square2xbox_noise = RBF_Delta_Rule(input_dim=1, rbf_dim=rbf_unit, study_rate=s_l, epochs=epochs, mode=mode)
             
             X_train_sin2x, y_train_sin2x = sin2x_gen.data
             X_train_square2xbox, y_train_square2xbox = square2xbox_gen.data
@@ -266,7 +268,7 @@ class Test(unittest.TestCase):
                 residual_errors = []
 
                 for rbf_unit in rbf_units_range:
-                    rbf_net = RBF_seq.RBF_SEQ(input_dim=1, rbf_dim=rbf_unit)
+                    rbf_net = RBF_Delta_Rule(input_dim=1, rbf_dim=rbf_unit)
                     
                     X_train, y_train = gen.data
                     centers = np.linspace(X_train[0], X_train[-1], rbf_unit).reshape(-1, 1)
@@ -318,7 +320,7 @@ class Test(unittest.TestCase):
             rbf_batch.backward(data_generator.data[0], data_generator.data[1])
             residuals_manual_batch.append(np.mean((rbf_batch(data_generator.data[0]) - data_generator.data[1]) ** 2))
             
-            rbf_seq = RBF_seq.RBF_SEQ(input_dim=1, rbf_dim=rbf_unit)
+            rbf_seq = RBF_Delta_Rule(input_dim=1, rbf_dim=rbf_unit)
             rbf_seq.set_C_n_Sigma(centers_manual, np.array([1.0] * rbf_unit))
             rbf_seq.backward(data_generator.data[0], data_generator.data[1])
             residuals_manual_sequential.append(np.mean((rbf_seq(data_generator.data[0]) - data_generator.data[1]) ** 2))
@@ -329,31 +331,31 @@ class Test(unittest.TestCase):
             rbf_random_batch.backward(data_generator.data[0], data_generator.data[1])
             residuals_random_batch.append(np.mean((rbf_random_batch(data_generator.data[0]) - data_generator.data[1]) ** 2))
             
-            rbf_random_seq = RBF_seq.RBF_SEQ(input_dim=1, rbf_dim=rbf_unit)
+            rbf_random_seq = RBF_Delta_Rule(input_dim=1, rbf_dim=rbf_unit)
             rbf_random_seq.set_C_n_Sigma(centers_random, np.array([1.0] * rbf_unit))
             rbf_random_seq.backward(data_generator.data[0], data_generator.data[1])
             residuals_random_sequential.append(np.mean((rbf_random_seq(data_generator.data[0]) - data_generator.data[1]) ** 2))
         
-        residuals = {}
-        residuals['manual_batch'] = residuals_manual_batch
-        residuals['manual_sequential'] = residuals_manual_sequential
-        residuals['random_batch'] = residuals_random_batch
-        residuals['random_sequential'] = residuals_random_sequential
+        # residuals = {}
+        # residuals['manual_batch'] = residuals_manual_batch
+        # residuals['manual_sequential'] = residuals_manual_sequential
+        # residuals['random_batch'] = residuals_random_batch
+        # residuals['random_sequential'] = residuals_random_sequential
+        #
+        # self.plot_residuals_vs_units_comparison(rbf_units_range, residuals, function_name)
 
-        self.plot_residuals_vs_units_comparison(rbf_units_range, residuals, function_name)
-
-        # plt.figure()
-        # plt.plot(rbf_units_range, residuals_manual_batch, label="Manual Batch", marker='o', color='blue')
-        # plt.plot(rbf_units_range, residuals_manual_sequential, label="Manual Sequential", marker='o', color='green')
-        # plt.plot(rbf_units_range, residuals_random_batch, label="Random Batch", marker='o', color='red')
-        # plt.plot(rbf_units_range, residuals_random_sequential, label="Random Sequential", marker='o', color='orange')
+        plt.figure()
+        plt.plot(rbf_units_range, residuals_manual_batch, label="Manual Batch", marker='o', color='blue')
+        plt.plot(rbf_units_range, residuals_manual_sequential, label="Manual Sequential", marker='o', color='green')
+        plt.plot(rbf_units_range, residuals_random_batch, label="Random Batch", marker='o', color='red')
+        plt.plot(rbf_units_range, residuals_random_sequential, label="Random Sequential", marker='o', color='orange')
         
-        # plt.title(f'Residual Error vs Number of RBF Units - {function_name}')
-        # plt.xlabel('Number of RBF Units')
-        # plt.ylabel('Residual Error (MSE)')
-        # plt.grid(True)
-        # plt.legend()
-        # plt.show()
+        plt.title(f'Residual Error vs Number of RBF Units - {function_name}')
+        plt.xlabel('Number of RBF Units')
+        plt.ylabel('Residual Error (MSE)')
+        plt.grid(True)
+        plt.legend()
+        plt.show()
 
     def test_run_all_rbf_comparisons(self):
         self.plot_rbf_modes_comparison(self.data_generator_sin2x, 'sin(2x)')
