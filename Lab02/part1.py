@@ -191,7 +191,7 @@ class Test(unittest.TestCase):
 
 
     def test_rbf_residuals_vs_units_seq(self):
-        rbf_units_range = range(1, 21)
+        rbf_units_range = range(1, 14)
         
         residuals_sin2x = []
         residuals_square2xbox = []
@@ -206,7 +206,7 @@ class Test(unittest.TestCase):
         sin2x_noise_gen.add_gaussian_noise(0, 0.5)
         square2xbox_noise_gen.add_gaussian_noise(0, 0.5)
 
-        s_l, epochs = 0.01, 10
+        s_l, epochs = 0.001, 500
         mode = "b"
         for rbf_unit in rbf_units_range:
             rbf_sin2x = RBF_Delta_Rule(input_dim=1, rbf_dim=rbf_unit, study_rate=s_l, epochs=epochs, mode=mode)
