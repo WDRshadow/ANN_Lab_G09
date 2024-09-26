@@ -14,9 +14,12 @@ class RBF(MLP):
         X = np.insert(X, X.shape[1], 1, axis=1)
         self.layers[1].W = np.linalg.pinv(X) @ Y
 
-    def train(self, X: np.ndarray, Y: np.ndarray, msg=False):
+    def train(self, X: np.ndarray, Y: np.ndarray, msg=False, mode = None):
         for _ in range(self.epochs):
-            self.layers[0].backward(None, X, self.study_rate)
+            if mode == "three":
+                self.layers[0].backward_2(None, X, self.study_rate)
+            else:
+                self.layers[0].backward(None, X, self.study_rate)
         self.backward(X, Y)
 
     def set_C_n_Sigma(self, C: np.ndarray, Sigma: np.ndarray):
@@ -70,3 +73,16 @@ class RBFLayer(Layer):
             winner_idx = np.argmin(distances)
             self.C[winner_idx] += learning_rate * (x[0] - self.C[winner_idx])
         return dO
+    
+    def backward_2(self, dO: np.ndarray, X: np.ndarray, learning_rate: float) -> np.ndarray:
+        for x in X:
+            x = np.array([x] * self.C.shape[0])  
+            distances = np.linalg.norm(x - self.C, axis=1)  
+
+            top_3_winner_idxs = np.argsort(distances)[:3]
+
+            for winner_idx in top_3_winner_idxs:
+                self.C[winner_idx] += learning_rate * (x[0] - self.C[winner_idx])
+
+        return dO
+
