@@ -20,7 +20,7 @@ class Lab02Part2DataGenerator:
 
 
 def animal_ordering():
-    data = np.loadtxt('./Lab02/data_lab2/animals.dat', delimiter=",", dtype=int)
+    data = np.loadtxt('data_lab2/animals.dat', delimiter=",", dtype=int)
     data = np.reshape(data, (32, 84))
 
     # 100x1 grid, 20 epochs, 0.2 learning rate
@@ -31,7 +31,7 @@ def animal_ordering():
     som = SOM_2D(grid_size_m, grid_size_n, 84, learning_rate, sigma_0=10)
     som.train(data, epochs=20)
 
-    names = np.loadtxt('./Lab02/data_lab2/animalnames.txt', dtype=str)
+    names = np.loadtxt('data_lab2/animalnames.txt', dtype=str)
     for i, name in enumerate(names):
         names[i] = name[1:-1]
 
@@ -67,7 +67,7 @@ def animal_ordering():
 
 
 def cyclic_tour():
-    with open('./Lab02/data_lab2/cities.dat', 'r') as file:
+    with open('data_lab2/cities.dat', 'r') as file:
         content = file.read().replace(';', '\n')
 
     data = np.loadtxt(content.splitlines(), delimiter=",", dtype=float, skiprows=3)
@@ -145,6 +145,8 @@ class TestSOM(unittest.TestCase):
 
         # plot the cities with a line following the order
         city_pos_order = city_pos[np.array(map_index).T[1].tolist()]
+        start_point = city_pos_order[0]
+        city_pos_order = np.vstack((city_pos_order, start_point))
         X = city_pos_order[:, 0]
         Y = city_pos_order[:, 1]
         plt.plot(X, Y, marker='o', color='blue', label='Mapped Positions', linestyle='-', linewidth=1)
@@ -170,7 +172,7 @@ class TestSOM(unittest.TestCase):
         vote_map = vote_som.map_vecs(votes)
 
         # plot the votes
-        def plot_votes(mapped, mp_class, title = "Mapped Points and Data Points"):
+        def plot_votes(mapped, mp_class, title="Mapped Points and Data Points"):
             """Plot the 2d map of the votes into a graph with points with different colors"""
             classes = np.unique(mp_class)
             num_class = len(classes)
@@ -189,9 +191,8 @@ class TestSOM(unittest.TestCase):
         plot_votes(vote_map, mp_sex, "Gender")
         plot_votes(vote_map, mp_district, "District")
 
-
-    # def test_animals(self):
-    #     animal_ordering()
+    def test_animals(self):
+        animal_ordering()
 
     def test_cycling(self):
         cyclic_tour()

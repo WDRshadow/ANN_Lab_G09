@@ -23,3 +23,13 @@ For Lab 01b part2:
 ```bash
 python -m unittest Lab01b/part2.py
 ```
+
+For Lab 02 part1:
+```bash
+python -m unittest Lab02/part1.py
+```
+
+For Lab 02 part2:
+```bash
+python -m unittest Lab02/part2.py
+```

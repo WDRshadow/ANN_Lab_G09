@@ -91,6 +91,9 @@ class Test(unittest.TestCase):
         rbf_net = RBF(input_dim=2, rbf_dim=rbf_unit)
         rbf_net.train(X_train, y_train)
         rbf_net.test(X_test, y_test)
+        y_pred = rbf_net(X_test)
+        plot_two_lines(np.arange(y_test.shape[0]), y_test[:, 0], y_pred[:, 0], plot_title='Ballist Distance')
+        plot_two_lines(np.arange(y_test.shape[0]), y_test[:, 1], y_pred[:, 1], plot_title='Ballist Height')
 
     def test_rbf_residuals_vs_units(self):
         rbf_units_range = range(1, 21)
@@ -364,3 +367,4 @@ class Test(unittest.TestCase):
         square2x_noise_gen = One_Dim_Function(0, 2 * np.pi, self.samples, function=lambda x: np.where(np.sin(x) >= 0, 1, -1))
         square2x_noise_gen.add_gaussian_noise(0, 0.5)
         self.plot_rbf_modes_comparison(square2x_noise_gen, 'square(2x)box with noise')
+        
