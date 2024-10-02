@@ -37,7 +37,7 @@ class TestHopfield(unittest.TestCase):
         x3d = np.array([1, 1, 1, -1, 1, 1, -1, 1])
 
         for i, new_pattern in enumerate([x1d, x2d, x3d]):
-            recalled_pattern = hopfield.recall(new_pattern)
+            recalled_pattern = hopfield.recall(new_pattern, steps=2)
 
             print(f"Test pattern: \t\t{new_pattern}")
             print(f"Recalled pattern: \t{recalled_pattern} == x{i+1}? {np.all(np.equal(x[i], recalled_pattern))}")
@@ -68,11 +68,42 @@ class TestHopfield(unittest.TestCase):
             comparison_result = np.where(new_pattern == recalled_pattern, 1, 0)
             print(f"Comparisson: \t\t{comparison_result}\n")
 
+        x1half = np.array([-1, -1, 1, -1, -1, 1, 1, -1]) # 4 diff
+        x1half2 = np.array([1, 1, -1, 1, 1, -1, -1, 1]) # 4 diff
 
-    # def test_print(self):
-    #     images = self.data_generator.data.reshape((11, 1024))
+        for i, new_pattern in enumerate([x1half, x1half2]):
+            recalled_pattern = hopfield.recall(new_pattern)
 
-    #     print_image(images[2].reshape((32, 32)))
+            print(f"Test pattern: \t\t{new_pattern}")
+            print(f"Recalled pattern: \t{recalled_pattern} == x1inv? {np.all(np.not_equal(x1, recalled_pattern))}")
 
-        
+            comparison_result = np.where(new_pattern == recalled_pattern, 1, 0)
+            print(f"Comparisson: \t\t{comparison_result}\n")
 
+        x1half = np.array([1, -1, 1, -1, -1, 1, 1, -1]) # 5 diff
+        x1half2 = np.array([1, 1, -1, 1, 1, -1, -1, -1]) # 5 diff
+
+        for i, new_pattern in enumerate([x1half, x1half2]):
+            recalled_pattern = hopfield.recall(new_pattern)
+
+            print(f"Test pattern: \t\t{new_pattern}")
+            print(f"Recalled pattern: \t{recalled_pattern} == x1inv? {np.all(np.not_equal(x1, recalled_pattern))}")
+
+            comparison_result = np.where(new_pattern == recalled_pattern, 1, 0)
+            print(f"Comparisson: \t\t{comparison_result}\n")
+
+    def test_32(self):
+        images = self.data_generator.data.reshape((11, 1024))
+        print_image(images[0].reshape(32,32))
+
+        hopfield = HopfieldNetwork(1024)
+
+        hopfield.train(images[:3])
+
+        recalled_pattern = hopfield.recall(images[0], steps=100)
+        print_image(recalled_pattern.reshape(32,32))
+
+    def test_print(self):
+        images = self.data_generator.data.reshape((11, 1024))
+
+        print_image(images[2].reshape((32, 32)))
