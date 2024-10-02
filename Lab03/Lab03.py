@@ -94,14 +94,27 @@ class TestHopfield(unittest.TestCase):
 
     def test_32(self):
         images = self.data_generator.data.reshape((11, 1024))
-        print_image(images[0].reshape(32,32))
+        print_image(images[9].reshape(32,32))
 
         hopfield = HopfieldNetwork(1024)
 
         hopfield.train(images[:3])
 
-        recalled_pattern = hopfield.recall(images[0], steps=100)
+        recalled_pattern = hopfield.recall(images[9], steps=100, asyncronous=False)
         print_image(recalled_pattern.reshape(32,32))
+
+        recalled_pattern = hopfield.recall(images[9], steps=100, random=True, asyncronous=False)
+        print_image(recalled_pattern.reshape(32,32))
+
+        print_image(images[1].reshape(32,32))
+        print_image(images[2].reshape(32,32))
+
+        recalled_pattern = hopfield.recall(images[10], steps=100, asyncronous=False)
+        print_image(recalled_pattern.reshape(32,32))
+
+        recalled_pattern = hopfield.recall(images[10], steps=100, random=True, asyncronous=False)
+        print_image(recalled_pattern.reshape(32,32))
+
 
     def test_print(self):
         images = self.data_generator.data.reshape((11, 1024))
