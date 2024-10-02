@@ -217,37 +217,47 @@ class TestHopfield(unittest.TestCase):
             noisy_pattern[flip_indices] *= -1
             return noisy_pattern
 
-        for noise_level in np.arange(0, 1.1, 0.1):
+        p1_rate = {round(i, 1): 0 for i in [x * 0.1 for x in range(11)]}
+        p2_rate = {round(i, 1): 0 for i in [x * 0.1 for x in range(11)]}
+        p3_rate = {round(i, 1): 0 for i in [x * 0.1 for x in range(11)]}
 
-            print("CURRENT NOISE LEVEL IS ")
-            print(noise_level)
+        for i in range(50):
+            for noise_level in np.arange(0, 1.1, 0.1):
+                print(noise_level)
+                noise_level = round(noise_level, 1)
+                num_flip = int(noise_level * 1024)
 
-            num_flip = int(noise_level * 1024)
+                noisy_p1 = add_noise(p1, num_flip)
+                noisy_p2 = add_noise(p2, num_flip)
+                noisy_p3 = add_noise(p3, num_flip)
 
-            noisy_p1 = add_noise(p1, num_flip)
-            noisy_p2 = add_noise(p2, num_flip)
-            noisy_p3 = add_noise(p3, num_flip)
+                recp1 = hopfield.recall(noisy_p1, asyncronous=False, steps=10)
+                recp2 = hopfield.recall(noisy_p2, asyncronous=False, steps=10)
+                recp3 = hopfield.recall(noisy_p3, asyncronous=False, steps=10)
 
-            recp1 = hopfield.recall(noisy_p1, asyncronous=False)
-            recp2 = hopfield.recall(noisy_p2, asyncronous=False)
-            recp3 = hopfield.recall(noisy_p3, asyncronous=False)
+                if np.array_equal(p1, recp1):
+                    p1_rate[noise_level] = p1_rate[noise_level] + 1
 
-            print("Original Pattern (p1):\n" + np.array2string(p1) + 
-            "\nNoisy Pattern (noisy_p1):\n" + np.array2string(noisy_p1) + 
-            "\nRecalled Pattern (recp1):\n" + np.array2string(recp1))
+                if np.array_equal(p2, recp2):
+                    p2_rate[noise_level] = p2_rate[noise_level] + 1
+
+                if np.array_equal(p3, recp3):
+                    p3_rate[noise_level] = p3_rate[noise_level] + 1
 
 
-            if np.array_equal(p1, recp1):
-                print("P1 equal to recall P1")
-            else:
-                print("P1 not equal to recall p1")
+        noise_levels = list(p1_rate.keys()) 
+        p1_values = list(p1_rate.values())
+        p2_values = list(p2_rate.values())
+        p3_values = list(p3_rate.values())
+        plt.figure(figsize=(10, 6))
+        plt.plot(noise_levels, p1_values, marker='o', label='Pattern 1')
+        plt.plot(noise_levels, p2_values, marker='o', label='Pattern 2')
+        plt.plot(noise_levels, p3_values, marker='o', label='Pattern 3')
 
-            if np.array_equal(p2, recp2):
-                print("P2 equal to recall P2")
-            else:
-                print("P2 not equal to recall p2")
-
-            if np.array_equal(p3, recp3):
-                print("P3 equal to recall P3")
-            else:
-                print("P3 not equal to recall p3")
+        plt.title('Number of Correct Recall vs Noise Level with step equal to ten')
+        plt.xlabel('Noise Level')
+        plt.ylabel('Number of Correct Recall')
+        plt.xticks(noise_levels)
+        plt.grid()
+        plt.legend()
+        plt.show()
