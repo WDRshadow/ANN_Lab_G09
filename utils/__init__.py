@@ -4,3 +4,4 @@ from .MLP import MLP, Layer
 from .RBF import RBF, RBF_Delta_Rule
 from .SLP import SingleLevelPerceptron, PerceptronLearning, DeltaRuleLearning
 from .SOM import SOM_2D
+from .HopfieldNetwork import HopfieldNetwork
