@@ -156,8 +156,8 @@ class TestHopfield(unittest.TestCase):
         print_image(recalled_p11.reshape(32,32))
 
         iterations = range(len(energies_p11)) 
-        plt.plot(iterations, energies_p10, label="p10", color='green', linestyle='--', marker='x')
-        plt.plot(iterations, energies_p11, label="p11", color='red', linestyle='-.', marker='s')
+        plt.plot(iterations, energies_p10, label="Pattern 10", color='green')
+        plt.plot(iterations, energies_p11, label="Pattern 11", color='red')
         plt.xlabel('Iterations')
         plt.ylabel('Energy')
         plt.title('Energy vs. Iterations')
@@ -173,20 +173,29 @@ class TestHopfield(unittest.TestCase):
         p10 = images[9]
         p11 = images[10]
 
-        arbitrary_start = np.random.choice([1, -1], (1024,1))
+        
+
+        arbitrary_start1 = np.random.choice([-1, 1], 1024)
+        arbitrary_start2 = np.random.choice([-1, 1], 1024)
 
         hopfield_1 = HopfieldNetwork(1024)
         hopfield_1.weights = hopfield_1.initialize_weights(random_gauss=True, symmetric=False)
         hopfield_2 = HopfieldNetwork(1024)
-        hopfield_2.weights = np.multiply(0.5, np.add(hopfield_1.weights, hopfield_1.weights.T))
-        # hopfield_2.weights = hopfield_2.initialize_weights(random_gauss=True, symmetric=True)
+        hopfield_2.weights = hopfield_2.initialize_weights(random_gauss=True, symmetric=True)
         hopfield_1.train(images[:3])
         hopfield_2.train(images[:3])
 
+        print(hopfield_1.weights)
+        print(hopfield_2.weights)
+        print(arbitrary_start1)
+        print(arbitrary_start2)
 
+        recalled_1, energies_1 = hopfield_1.recall(arbitrary_start1, steps = 3, energy_list=True, asyncronous=True, random=True)
+        recalled_2, energies_2 = hopfield_2.recall(arbitrary_start2, steps = 3, energy_list=True, asyncronous=True, random=True)
 
-        recalled_1, energies_1 = hopfield_1.recall(arbitrary_start, steps = 3, energy_list=True)
-        recalled_2, energies_2 = hopfield_2.recall(arbitrary_start, steps = 3, energy_list=True)
+        print_image(recalled_1.reshape(32,32))
+        print_image(recalled_2.reshape(32,32))
+        print_image(p10.reshape(32,32))
 
         if np.array_equal(recalled_1, recalled_2):
             print("equal")

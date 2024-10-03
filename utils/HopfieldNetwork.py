@@ -17,7 +17,7 @@ class HopfieldNetwork:
         for pattern in patterns:
             pattern = np.array(pattern)
             self.weights += np.outer(pattern, pattern)
-        # np.fill_diagonal(self.weights, 0)
+        np.fill_diagonal(self.weights, 0)
         self.weights /= len(patterns)
 
         # print("!!!!!!!!!!!!")
@@ -44,7 +44,8 @@ class HopfieldNetwork:
                     raw_input = np.dot(self.weights[i], state)
                     aux_state[i] = 1 if raw_input >= 0 else -1
                 state = np.copy(aux_state)
-                # energies.append(self.energy(state))
+                energies.append(self.energy(state))
+                
         if energy_list:
             return state, energies
         return state
@@ -53,11 +54,15 @@ class HopfieldNetwork:
         state = np.copy(pattern)
         return self.update(state, steps, random, asyncronous, energy_list)
     
-    def energy(self, state):
-        product = np.outer(state, np.transpose(state))
-        energy_sum = np.sum(np.multiply(self.weights, product))
-        return -energy_sum
+    # def energy(self, state):
+    #     product = np.outer(state, np.transpose(state))
+    #     energy_sum = np.sum(np.multiply(self.weights, product))
+    #     return -energy_sum
     
+    def energy(self, state):
+        """Calculate the energy of the current state."""
+        return -0.5 * np.sum(np.dot(state, np.dot(self.weights, state)))
+
     def count_stable_patterns(self, patterns):
         stable_count = 0
         for pattern in patterns:
