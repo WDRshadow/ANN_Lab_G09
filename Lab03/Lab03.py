@@ -203,6 +203,12 @@ class TestHopfield(unittest.TestCase):
         plt.show()
 
 
+    def add_noise(self, pattern, num_flip):
+        noisy_pattern = pattern.copy()
+        flip_indices = np.random.choice(100, num_flip, replace=False)
+        noisy_pattern[flip_indices] *= -1
+        return noisy_pattern
+
     def test_34(self):
         images = self.data_generator.data.reshape((11, 1024))
         p1 = images[0]
@@ -210,12 +216,6 @@ class TestHopfield(unittest.TestCase):
         p3 = images[2]
         hopfield = HopfieldNetwork(1024)
         hopfield.train(images[:3])
-
-        def add_noise(pattern, num_flip):
-            noisy_pattern = pattern.copy()
-            flip_indices = np.random.choice(1024, num_flip, replace=False)
-            noisy_pattern[flip_indices] *= -1
-            return noisy_pattern
 
         p1_rate = {round(i, 1): 0 for i in [x * 0.1 for x in range(11)]}
         p2_rate = {round(i, 1): 0 for i in [x * 0.1 for x in range(11)]}
@@ -227,9 +227,9 @@ class TestHopfield(unittest.TestCase):
                 noise_level = round(noise_level, 1)
                 num_flip = int(noise_level * 1024)
 
-                noisy_p1 = add_noise(p1, num_flip)
-                noisy_p2 = add_noise(p2, num_flip)
-                noisy_p3 = add_noise(p3, num_flip)
+                noisy_p1 = self.add_noise(p1, num_flip)
+                noisy_p2 = self.add_noise(p2, num_flip)
+                noisy_p3 = self.add_noise(p3, num_flip)
 
                 recp1 = hopfield.recall(noisy_p1, asyncronous=False, steps=10)
                 recp2 = hopfield.recall(noisy_p2, asyncronous=False, steps=10)
@@ -261,3 +261,166 @@ class TestHopfield(unittest.TestCase):
         plt.grid()
         plt.legend()
         plt.show()
+
+    def test_35(self):
+        # add patterns p4, p5, p6, p7 in the network and see if distorted versions can be recognized
+
+        images = self.data_generator.data.reshape((11, 1024))
+
+        noise_list = {0: [], 10: [], 20: []}
+
+        for i in range(10):
+            hopfield = HopfieldNetwork(1024)
+            hopfield.train(images[:i + 1])
+
+            for noise_level in [0, 0.1, 0.2]:
+                noise_level = round(noise_level, 1)
+                num_flip = int(noise_level * 1024)
+
+                correct_recall_count = 0
+                for j in range(i + 1):
+                    images_noisy = self.add_noise(images[j], num_flip)
+                    recp1 = hopfield.recall(images_noisy, steps=3)
+
+                    if np.array_equal(images[j], recp1):
+                        correct_recall_count += 1
+
+                recall_ratio = correct_recall_count / (i + 1)
+                noise_list[int(noise_level * 100)].append(recall_ratio)
+
+        x = range(1,11)  # Number of patterns
+        # print(noise_list)
+        plt.plot(x, noise_list[0], label="0% Noise")
+        plt.plot(x, noise_list[10], label="10% Noise")
+        plt.plot(x, noise_list[20], label="20% Noise")
+
+        plt.xlabel('Number of Patterns')
+        plt.ylabel('Recall Ratio')
+        plt.title('Recall Ratio vs Number of Patterns at Different Noise Levels')
+        plt.xticks(x)
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+
+
+    def test_35_similarity(self):
+        images = self.data_generator.data.reshape((11, 1024))
+
+        images = images[:10]
+
+        similarity_matrix = np.zeros((10, 10))
+
+        for i in range(10):
+            for j in range(10):
+                similarity_matrix[i, j] = np.sum(images[i] == images[j]) / 1024
+
+        print("Similarity Table (Dot Product):")
+        for row in similarity_matrix:
+            print("  ".join(f"{val:.2f}" for val in row))
+
+    def test_35_random_samples(self):
+        noise_list = {0: [], 10: [], 20: []}
+
+        images = np.random.choice([1, -1], size=(150, 1024))
+
+        for i in range(0, 150, 10):
+            print(i)
+            hopfield = HopfieldNetwork(1024)
+            hopfield.train(images[:i + 1])
+
+            for noise_level in [0, 0.1, 0.2]:
+                noise_level = round(noise_level, 1)
+                num_flip = int(noise_level * 1024)
+
+                correct_recall_count = 0
+                for j in range(i + 1):
+                    images_noisy = self.add_noise(images[j], num_flip)
+                    recp1 = hopfield.recall(images_noisy, steps=3)
+
+                    if np.array_equal(images[j], recp1):
+                        correct_recall_count += 1
+
+                recall_ratio = correct_recall_count / (i + 1)
+                noise_list[int(noise_level * 100)].append(recall_ratio)
+
+        x = range(1, 151, 10)  # Number of patterns
+        # print(noise_list)
+        plt.plot(x, noise_list[0], label="0% Noise")
+        plt.plot(x, noise_list[10], label="10% Noise")
+        plt.plot(x, noise_list[20], label="20% Noise")
+
+        plt.xlabel('Number of Patterns')
+        plt.ylabel('Recall Ratio')
+        plt.title('Recall Ratio vs Number of Patterns at Different Noise Levels')
+        plt.xticks(range(1, 151, 10))
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+
+
+    def test_35_2(self):
+        num_patterns = 300
+        pattern_size = 100
+        patterns = np.random.choice([1, -1], size=(num_patterns, pattern_size))
+
+        hopfield = HopfieldNetwork(pattern_size)
+        stable_counts = []
+
+        for i in range(num_patterns):
+            print(i)
+            hopfield.train([patterns[i]]) 
+            stable_count = hopfield.count_stable_patterns(patterns[:i+1])
+            stable_counts.append(stable_count)
+
+        plt.figure(figsize=(10, 6))
+        plt.plot(range(1, num_patterns + 1), stable_counts, label='Stable Patterns', color='blue')
+        plt.xlabel('Number of Learned Patterns')
+        plt.ylabel('Number of Stable Patterns')
+        plt.title('Stability of Patterns in Hopfield Network')
+        plt.grid(True)
+        plt.legend()
+        plt.show()
+
+    def test_35_3(self):
+
+        noise_list = {0: [], 10: [], 20: []}
+        num_patterns = 300
+        pattern_size = 100
+        images = np.random.choice([1, -1], size=(num_patterns, pattern_size))
+
+        hopfield = HopfieldNetwork(pattern_size)
+
+        for i in range(0, 300, 10):
+            print(i)
+            hopfield = HopfieldNetwork(pattern_size)
+            hopfield.train(images[:i + 1])
+
+            for noise_level in [0, 0.1, 0.2]:
+                noise_level = round(noise_level, 1)
+                num_flip = int(noise_level * 100)
+
+                correct_recall_count = 0
+                for j in range(i + 1):
+                    images_noisy = self.add_noise(images[j], num_flip)
+                    recp1 = hopfield.recall(images_noisy, steps=3)
+
+                    if np.array_equal(images[j], recp1):
+                        correct_recall_count += 1
+
+                recall_ratio = correct_recall_count / (i + 1)
+                noise_list[int(noise_level * 100)].append(recall_ratio)
+
+        x = range(1, 300, 10)  # Number of patterns
+        # print(noise_list)
+        plt.plot(x, noise_list[0], label="0% Noise")
+        plt.plot(x, noise_list[10], label="10% Noise")
+        plt.plot(x, noise_list[20], label="20% Noise")
+
+        plt.xlabel('Number of Patterns')
+        plt.ylabel('Recall Ratio')
+        plt.title('Recall Ratio vs Number of Patterns at Different Noise Levels')
+        plt.xticks(range(1, 300, 10))
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+
