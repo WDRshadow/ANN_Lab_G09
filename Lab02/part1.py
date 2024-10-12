@@ -3,7 +3,7 @@ import unittest
 import matplotlib.pyplot as plt
 import numpy as np
 
-from utils import RBF, One_Dim_Function, Read_Files, RBF_seq, RBF_Delta_Rule
+from utils import RBF, One_Dim_Function, Read_Files, RBF_Delta_Rule
 
 
 def plot_two_lines(X, Y_train, Y_pred, plot_title=''):
