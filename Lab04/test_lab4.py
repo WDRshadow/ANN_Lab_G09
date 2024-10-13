@@ -11,19 +11,21 @@ class TestRBM(unittest.TestCase):
         self.image_size = [28,28]
         train_imgs,train_lbls,test_imgs,test_lbls = read_mnist(dim=self.image_size, n_train=60000, n_test=10000)
             
-        n_train_fraction = int(len(train_imgs) * 0.05)
+        n_train_fraction = int(len(train_imgs) * 0.1)
         print("Smaller sample size, first:", n_train_fraction, "values")
         train_imgs = train_imgs[:n_train_fraction]
         np.random.shuffle(train_imgs)
 
         self.train_imgs = train_imgs
+        self.test_imgs = test_imgs
 
         # RELEVANT VALUES TO MODIFY:
         self.n_iterations=500
         # TODO: MUST BE EQUAL TO STEP DEFINED IN THE RBM CODE, ADAPT ACCORDINGLY
-        self.rbm_step = 10
+        self.rbm_step = 2
 
     def test_hidden_nodes(self):
+        return
         start = 200
         end = 500
         step = 100
@@ -68,7 +70,7 @@ class TestRBM(unittest.TestCase):
                                          image_size=self.image_size,
                                          is_top=False,
                                          n_labels=10,
-                                         batch_size=10,
+                                         batch_size=20,
                                          weight_changes=weight_changes,
                                          visible_bias_changes=visible_bias_changes,
                                          hidden_bias_changes=hidden_bias_changes
@@ -89,3 +91,8 @@ class TestRBM(unittest.TestCase):
         plt.ylabel('Update Magnitude (Norm)')
         plt.legend()
         plt.show()
+
+        for i in range(5):
+            reconstructed_img = reconstruct_image(rbm, self.test_imgs[i])
+            visualize_reconstruction(self.test_imgs[i].reshape(rbm.image_size), reconstructed_img)
+    

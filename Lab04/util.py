@@ -11,7 +11,8 @@ def sigmoid(support):
     Returns:
       on_probabilities: shape is (size of mini-batch, size of layer)      
     """
-    support_clipped = np.clip(support, -8, 8)
+    # print(support, len(support))
+    support_clipped = np.clip(support, -500, 500)
     on_probabilities = 1./(1.+np.exp(-support_clipped))
     return on_probabilities
 
