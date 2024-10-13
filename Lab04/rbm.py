@@ -60,17 +60,17 @@ class RestrictedBoltzmannMachine:
 
         self.momentum = 0.7
 
-        self.print_period = 100
+        self.print_period = 2
 
         self.rf = {  # receptive-fields. Only applicable when visible layer is input data
-            "period": 100,  # iteration period to visualize
+            "period": 2,  # iteration period to visualize
             "grid": [5, 5],  # size of the grid
             "ids": np.random.randint(0, self.ndim_hidden, 25)  # pick some random hidden units
         }
 
         return
 
-    def cd1(self, visible_trainset, n_iterations=10000):
+    def cd1(self, visible_trainset, n_iterations=10000, plot_loss=None):
 
         """Contrastive Divergence with k=1 full alternating Gibbs sampling
 
@@ -111,6 +111,7 @@ class RestrictedBoltzmannMachine:
             if it % self.print_period == 0:
                 recon_loss = np.mean(np.linalg.norm(v_0 - v_1, axis=1))
                 print("iteration=%7d recon_loss=%4.4f" % (it, recon_loss))
+                if plot_loss is not None: plot_loss.append(recon_loss)
 
         return
 
