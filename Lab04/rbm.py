@@ -251,9 +251,12 @@ class RestrictedBoltzmannMachine:
 
         n_samples = visible_minibatch.shape[0]
 
-        # [TODO TASK 4.2] perform same computation as the function 'get_h_given_v' but with directed connections (replace the zeros below)
+        # perform same computation as the function 'get_h_given_v' but with directed connections (replace the zeros below)
 
-        return np.zeros((n_samples, self.ndim_hidden)), np.zeros((n_samples, self.ndim_hidden))
+        p = sigmoid(np.dot(visible_minibatch, self.weight_v_to_h) + self.bias_h)
+        h = sample_binary(p)
+
+        return p, h
 
     def get_v_given_h_dir(self, hidden_minibatch):
 
@@ -281,19 +284,28 @@ class RestrictedBoltzmannMachine:
             to get activities. The probabilities as well as activities can then be concatenated back into a normal visible layer.
             """
 
-            # [TODO TASK 4.2] Note that even though this function performs same computation as 'get_v_given_h' but with directed connections,
+            # Note that even though this function performs same computation as 'get_v_given_h' but with directed connections,
             # this case should never be executed : when the RBM is a part of a DBN and is at the top, it will have not have directed connections.
             # Appropriate code here is to raise an error (replace pass below)
 
-            pass
+            total_input = np.dot(hidden_minibatch, self.weight_v_to_h.T) + self.bias_v
+            data_input = total_input[:, :-self.n_labels]
+            label_input = total_input[:, -self.n_labels:]
+            data_prob = sigmoid(data_input)
+            label_prob = softmax(label_input)
+            data_act = sample_binary(data_prob)
+            label_act = sample_categorical(label_prob)
+            p = np.concatenate((data_prob, label_prob), axis=1)
+            v = np.concatenate((data_act, label_act), axis=1)
 
         else:
 
-            # [TODO TASK 4.2] performs same computaton as the function 'get_v_given_h' but with directed connections (replace the pass and zeros below)
+            # performs same computaton as the function 'get_v_given_h' but with directed connections (replace the pass and zeros below)
 
-            pass
+            p = sigmoid(np.dot(hidden_minibatch, self.weight_h_to_v) + self.bias_v)
+            v = sample_binary(p)
 
-        return np.zeros((n_samples, self.ndim_visible)), np.zeros((n_samples, self.ndim_visible))
+        return p, v
 
     def update_generate_params(self, inps, trgs, preds):
 

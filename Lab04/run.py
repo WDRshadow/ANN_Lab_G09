@@ -5,7 +5,7 @@ from dbn import DeepBeliefNet
 if __name__ == "__main__":
 
     image_size = [28,28]
-    train_imgs,train_lbls,test_imgs,test_lbls = read_mnist(dim=image_size, n_train=60000, n_test=10000)
+    train_imgs,train_lbls,test_imgs,test_lbls = read_mnist(dim=image_size, n_train=600, n_test=100)
 
     n_train_fraction = int(len(train_imgs) * 0.05)
     print("Smaller sample size, first:", n_train_fraction, "values")
@@ -13,7 +13,7 @@ if __name__ == "__main__":
     np.random.shuffle(train_imgs)
 
     ''' restricted boltzmann machine '''
-    
+
     print ("\nStarting a Restricted Boltzmann Machine..")
 
     rbm = RestrictedBoltzmannMachine(ndim_visible=image_size[0]*image_size[1],
@@ -24,8 +24,8 @@ if __name__ == "__main__":
                                      n_labels=10,
                                      batch_size=10
     )
-    
-    rbm.cd1(visible_trainset=train_imgs, n_iterations=101)
+
+    rbm.cd1(visible_trainset=train_imgs, n_iterations=1000)
 
     for i in range(5):
         reconstructed_img = reconstruct_image(rbm, test_imgs[i])
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     #
     # ''' greedy layer-wise training '''
     #
-    # dbn.train_greedylayerwise(vis_trainset=train_imgs, lbl_trainset=train_lbls, n_iterations=10000)
+    # dbn.train_greedylayerwise(vis_trainset=train_imgs, lbl_trainset=train_lbls, n_iterations=100)
     #
     # dbn.recognize(train_imgs, train_lbls)
     #
