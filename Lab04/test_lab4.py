@@ -20,9 +20,9 @@ class TestRBM(unittest.TestCase):
         self.test_imgs = test_imgs
 
         # RELEVANT VALUES TO MODIFY:
-        self.n_iterations=500
+        self.n_iterations=5000
         # TODO: MUST BE EQUAL TO STEP DEFINED IN THE RBM CODE, ADAPT ACCORDINGLY
-        self.rbm_step = 2
+        self.rbm_step = 20
 
     def test_hidden_nodes(self):
         return
@@ -64,20 +64,32 @@ class TestRBM(unittest.TestCase):
         visible_bias_changes = []
         hidden_bias_changes = []
 
+        # rbm = RestrictedBoltzmannMachine(ndim_visible=self.image_size[0]*self.image_size[1],
+        #                                  ndim_hidden=500,
+        #                                  is_bottom=True,
+        #                                  image_size=self.image_size,
+        #                                  is_top=False,
+        #                                  n_labels=10,
+        #                                  batch_size=20,
+        #                                  weight_changes=weight_changes,
+        #                                  visible_bias_changes=visible_bias_changes,
+        #                                  hidden_bias_changes=hidden_bias_changes
+        # )
         rbm = RestrictedBoltzmannMachine(ndim_visible=self.image_size[0]*self.image_size[1],
                                          ndim_hidden=500,
                                          is_bottom=True,
                                          image_size=self.image_size,
                                          is_top=False,
                                          n_labels=10,
-                                         batch_size=20,
-                                         weight_changes=weight_changes,
-                                         visible_bias_changes=visible_bias_changes,
-                                         hidden_bias_changes=hidden_bias_changes
+                                         batch_size=20
         )
 
         mean_reconst_loss = []    
-        rbm.cd1(visible_trainset=self.train_imgs, n_iterations=self.n_iterations, plot_loss=mean_reconst_loss)
+        # rbm.cd1(visible_trainset=self.train_imgs, n_iterations=self.n_iterations, plot_loss=mean_reconst_loss)
+        logs = rbm.cd1(visible_trainset=self.train_imgs, n_iterations=self.n_iterations)
+        weight_changes = logs["sum_of_weights_changes"][0]
+        visible_bias_changes = logs["sum_of_weights_changes"][1]
+        hidden_bias_changes = logs["sum_of_weights_changes"][2]
 
         plt.plot(weight_changes, label="Weight changes")
         plt.plot(visible_bias_changes, label="Visible bias changes")
