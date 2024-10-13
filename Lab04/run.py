@@ -1,11 +1,16 @@
 from util import *
-from rbm import RestrictedBoltzmannMachine 
+from rbm import RestrictedBoltzmannMachine
 from dbn import DeepBeliefNet
 
 if __name__ == "__main__":
 
     image_size = [28,28]
     train_imgs,train_lbls,test_imgs,test_lbls = read_mnist(dim=image_size, n_train=60000, n_test=10000)
+
+    n_train_fraction = int(len(train_imgs) * 0.05)
+    print("Smaller sample size, first:", n_train_fraction, "values")
+    train_imgs = train_imgs[:n_train_fraction]
+    np.random.shuffle(train_imgs)
 
     ''' restricted boltzmann machine '''
     
@@ -20,7 +25,11 @@ if __name__ == "__main__":
                                      batch_size=10
     )
     
-    rbm.cd1(visible_trainset=train_imgs, n_iterations=10000)
+    rbm.cd1(visible_trainset=train_imgs, n_iterations=101)
+
+    for i in range(5):
+        reconstructed_img = reconstruct_image(rbm, test_imgs[i])
+        visualize_reconstruction(test_imgs[i].reshape(rbm.image_size), reconstructed_img)
     
     # ''' deep- belief net '''
     #

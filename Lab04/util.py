@@ -122,3 +122,44 @@ def stitch_video(fig,imgs):
     import matplotlib.animation as animation
     
     return animation.ArtistAnimation(fig, imgs, interval=100, blit=True, repeat=False)    
+
+
+def reconstruct_image(rbm, image):
+    """
+    Reconstruct a single image using the trained RBM.
+
+    Args:
+        rbm: Trained RBM model.
+        image: A single input image, should be of shape (ndim_visible,).
+
+    Returns:
+        The reconstructed image.
+    """
+    # Step 1: Get hidden probabilities and hidden activations from the input image
+    p_h, h = rbm.get_h_given_v(image.reshape(1, -1))  # reshape to (1, ndim_visible) for single input
+
+    # Step 2: Reconstruct the visible layer from hidden layer
+    p_v_reconstructed, v_reconstructed = rbm.get_v_given_h(h)
+
+    # Step 3: Return the reconstructed image
+    return p_v_reconstructed.reshape(rbm.image_size)  # reshape back to image size
+
+def visualize_reconstruction(original_img, reconstructed_img):
+    """
+    Visualize the original and reconstructed images side by side.
+
+    Args:
+        original_img: Original input image.
+        reconstructed_img: Reconstructed image.
+    """
+    fig, axs = plt.subplots(1, 2, figsize=(8, 4))
+
+    axs[0].imshow(original_img, cmap='gray')
+    axs[0].set_title('Original Image')
+    axs[0].axis('off')
+
+    axs[1].imshow(reconstructed_img, cmap='gray')
+    axs[1].set_title('Reconstructed Image')
+    axs[1].axis('off')
+
+    plt.show()

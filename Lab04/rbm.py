@@ -60,10 +60,10 @@ class RestrictedBoltzmannMachine:
 
         self.momentum = 0.7
 
-        self.print_period = 5000
+        self.print_period = 100
 
         self.rf = {  # receptive-fields. Only applicable when visible layer is input data
-            "period": 5000,  # iteration period to visualize
+            "period": 100,  # iteration period to visualize
             "grid": [5, 5],  # size of the grid
             "ids": np.random.randint(0, self.ndim_hidden, 25)  # pick some random hidden units
         }
@@ -109,7 +109,8 @@ class RestrictedBoltzmannMachine:
             # print progress
 
             if it % self.print_period == 0:
-                print("iteration=%7d recon_loss=%4.4f" % (it, np.linalg.norm(visible_trainset - visible_trainset)))
+                recon_loss = np.mean(np.linalg.norm(v_0 - v_1, axis=1))
+                print("iteration=%7d recon_loss=%4.4f" % (it, recon_loss))
 
         return
 
