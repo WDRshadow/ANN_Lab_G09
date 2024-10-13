@@ -66,14 +66,24 @@ class DeepBeliefNet():
         vis = true_img # visible layer gets the image data
         
         lbl = np.ones(true_lbl.shape)/10. # start the net by telling you know nothing about labels        
+
+        n_labels = lbl.shape[1]
         
         # [TODO TASK 4.2] fix the image data in the visible layer and drive the network bottom to top. In the top RBM, run alternating Gibbs sampling \
         # and read out the labels (replace pass below and 'predicted_lbl' to your predicted labels).
         # NOTE : inferring entire train/test set may require too much compute memory (depends on your system). In that case, divide into mini-batches.
         
-        for _ in range(self.n_gibbs_recog):
+        p_hid, hidout = self.rbm_stack["vis--hid"].get_h_given_v_dir(vis)
+        p_pen, penout = self.rbm_stack["hid--pen"].get_h_given_v_dir(p_hid)
 
-            pass
+        top_v = np.concatenate((p_pen, lbl), axis=1)
+
+        for _ in range(self.n_gibbs_recog):
+            top_v[:,:-n_labels] = p_pen
+            _, top_h = self.rbm_stack["pen+lbl--top"].get_h_given_v(top_v)
+            _, top_v = self.rbm_stack["pen+lbl--top"].get_v_given_h(top_h)
+
+        predicted_lbl = top_v[:,-n_labels:]
 
         predicted_lbl = np.zeros(true_lbl.shape)
             
@@ -98,15 +108,31 @@ class DeepBeliefNet():
         ax.set_xticks([]); ax.set_yticks([])
 
         lbl = true_lbl
+        n_labels = lbl.shape[1]
 
         # [TODO TASK 4.2] fix the label in the label layer and run alternating Gibbs sampling in the top RBM. From the top RBM, drive the network \ 
         # top to the bottom visible layer (replace 'vis' from random to your generated visible layer).
             
-        for _ in range(self.n_gibbs_gener):
+        top = self.rbm_stack["pen+lbl--top"]
+        pen = self.rbm_stack["hid--pen"]
+        hid = self.rbm_stack["vis--hid"]
+        
+        p_top_v = np.random.uniform(0,1,(lbl.shape[0], top.bias_v.shape[0]))
+        top_v = sample_binary(p_top_v)
 
-            vis = np.random.rand(n_sample,self.sizes["vis"])
+        for _ in range(self.n_gibbs_gener):
+            p_top_v[:,-n_labels:] = lbl
+            top_v[:,-n_labels:] = lbl
+     
+            p_top_h, top_h = top.get_h_given_v(p_top_v)
+            p_top_v, top_v = top.get_v_given_h(p_top_h)
+
+        _, pen_v = pen.get_v_given_h_dir(top_v[:,:-n_labels])
+        vis, _ = hid.get_v_given_h_dir(pen_v)
+
+        vis = np.random.rand(n_sample,self.sizes["vis"])
             
-            records.append( [ ax.imshow(vis.reshape(self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True, interpolation=None) ] )
+        records.append( [ ax.imshow(vis.reshape(self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True, interpolation=None) ] )
             
         anim = stitch_video(fig,records).save("%s.generate%d.mp4"%(name,np.argmax(true_lbl)))            
             
@@ -143,20 +169,29 @@ class DeepBeliefNet():
             """ 
             CD-1 training for vis--hid 
             """            
+            self.rbm_stack["vis--hid"].cd1(vis_trainset, n_iterations)
             self.savetofile_rbm(loc="trained_rbm",name="vis--hid")
 
             print ("training hid--pen")
             """ 
             CD-1 training for hid--pen 
             """            
+            p_hid, hidout = self.rbm_stack["vis--hid"].get_h_given_v(vis_trainset)
             self.rbm_stack["vis--hid"].untwine_weights()            
+            self.rbm_stack["hid--pen"].cd1(p_hid, n_iterations)
             self.savetofile_rbm(loc="trained_rbm",name="hid--pen")            
 
             print ("training pen+lbl--top")
             """ 
             CD-1 training for pen+lbl--top 
             """
+            p_pen,penout = self.rbm_stack["hid--pen"].get_h_given_v(p_hid)
+            
             self.rbm_stack["hid--pen"].untwine_weights()
+
+            data_pen_lbl = np.hstack((p_pen, lbl_trainset))
+
+            self.rbm_stack["pen+lbl--top"].cd1(data_pen_lbl, n_iterations)
             self.savetofile_rbm(loc="trained_rbm",name="pen+lbl--top")            
 
         return    
