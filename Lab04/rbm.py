@@ -9,7 +9,7 @@ class RestrictedBoltzmannMachine:
     """
 
     def __init__(self, ndim_visible, ndim_hidden, is_bottom=False, image_size=[28, 28], is_top=False, n_labels=10,
-                 batch_size=10):
+                 batch_size=10, weight_changes=None, visible_bias_changes=None, hidden_bias_changes=None):
 
         """
         Args:
@@ -60,13 +60,18 @@ class RestrictedBoltzmannMachine:
 
         self.momentum = 0.7
 
-        self.print_period = 2
+        self.print_period = 10
 
         self.rf = {  # receptive-fields. Only applicable when visible layer is input data
-            "period": 2,  # iteration period to visualize
+            "period": 100,  # iteration period to visualize
             "grid": [5, 5],  # size of the grid
             "ids": np.random.randint(0, self.ndim_hidden, 25)  # pick some random hidden units
         }
+
+        # For printing data
+        self.weight_changes = weight_changes
+        self.visible_bias_changes = visible_bias_changes
+        self.hidden_bias_changes = hidden_bias_changes
 
         return
 
@@ -112,6 +117,15 @@ class RestrictedBoltzmannMachine:
                 recon_loss = np.mean(np.linalg.norm(v_0 - v_1, axis=1))
                 print("iteration=%7d recon_loss=%4.4f" % (it, recon_loss))
                 if plot_loss is not None: plot_loss.append(recon_loss)
+
+                if self.weight_changes is not None and self.visible_bias_changes is not None and self.hidden_bias_changes is not None:
+                    weight_norm = np.linalg.norm(self.delta_weight_vh)
+                    visible_bias_norm = np.linalg.norm(self.delta_bias_v)
+                    hidden_bias_norm = np.linalg.norm(self.delta_bias_h)
+        
+                    self.weight_changes.append(weight_norm)
+                    self.visible_bias_changes.append(visible_bias_norm)
+                    self.hidden_bias_changes.append(hidden_bias_norm)
 
         return
 
