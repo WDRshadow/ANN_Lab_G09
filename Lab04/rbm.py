@@ -288,15 +288,7 @@ class RestrictedBoltzmannMachine:
             # this case should never be executed : when the RBM is a part of a DBN and is at the top, it will have not have directed connections.
             # Appropriate code here is to raise an error (replace pass below)
 
-            total_input = np.dot(hidden_minibatch, self.weight_v_to_h.T) + self.bias_v
-            data_input = total_input[:, :-self.n_labels]
-            label_input = total_input[:, -self.n_labels:]
-            data_prob = sigmoid(data_input)
-            label_prob = softmax(label_input)
-            data_act = sample_binary(data_prob)
-            label_act = sample_categorical(label_prob)
-            p = np.concatenate((data_prob, label_prob), axis=1)
-            v = np.concatenate((data_act, label_act), axis=1)
+            raise RuntimeError("This function should not be executed when RBM is the top layer in a DBN")
 
         else:
 

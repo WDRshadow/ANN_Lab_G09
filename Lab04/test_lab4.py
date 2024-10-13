@@ -19,7 +19,7 @@ class TestRBM(unittest.TestCase):
         self.train_imgs = train_imgs
 
         # RELEVANT VALUES TO MODIFY:
-        self.n_iterations=101
+        self.n_iterations=500
         # TODO: MUST BE EQUAL TO STEP DEFINED IN THE RBM CODE, ADAPT ACCORDINGLY
         self.rbm_step = 10
 
