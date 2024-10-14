@@ -20,7 +20,7 @@ class TestRBM(unittest.TestCase):
         self.test_imgs = test_imgs
 
         # RELEVANT VALUES TO MODIFY:
-        self.n_iterations=50
+        self.n_iterations=500
         # TODO: MUST BE EQUAL TO STEP DEFINED IN THE RBM CODE, ADAPT ACCORDINGLY
         self.rbm_step = 1
 
@@ -91,7 +91,7 @@ class TestRBM(unittest.TestCase):
         plt.legend()
         plt.show()
 
-        plt.plot(average_hidden_activations[i], label=f'{ndim_hidden} hidden units')
+        plt.plot(average_hidden_activations[0], label="Average Hidden Activation Value")
 
         plt.title('Average Hidden Activations Value vs Iterations')
         plt.xlabel('Iteration')

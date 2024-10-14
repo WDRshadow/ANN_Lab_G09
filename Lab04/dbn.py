@@ -121,6 +121,7 @@ class DeepBeliefNet():
 
         # top->pen+lbl
         for _ in range(self.n_gibbs_gener):
+            p_top_v[:, -n_labels:] = lbl
             _, top_h = self.rbm_stack["pen+lbl--top"].get_h_given_v(p_top_v)
             p_top_v, _ = self.rbm_stack["pen+lbl--top"].get_v_given_h(top_h)
 

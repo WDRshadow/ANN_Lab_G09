@@ -70,7 +70,7 @@ class RestrictedBoltzmannMachine():
 
         # ensure_dir(visuals_save_path)
         self.rf = {  # receptive-fields. Only applicable when visible layer is input data
-            "period": 5000,  # iteration period to visualize
+            "period": 100,  # iteration period to visualize
             "grid": [5, 5],  # size of the grid
             "ids": np.random.randint(0, self.ndim_hidden, 25),  # pick some random hidden units
             # "path": visuals_save_path
@@ -175,7 +175,7 @@ class RestrictedBoltzmannMachine():
 
         return logs
 
-    def update_params(self, v_0, h_0, v_k, h_k):
+    def     update_params(self, v_0, h_0, v_k, h_k):
 
         """Update the weight and bias parameters.
 
