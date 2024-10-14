@@ -13,19 +13,18 @@ class TestRBM(unittest.TestCase):
             
         n_train_fraction = int(len(train_imgs) * 0.1)
         print("Smaller sample size, first:", n_train_fraction, "values")
-        train_imgs = train_imgs[:n_train_fraction]
         np.random.shuffle(train_imgs)
+        train_imgs = train_imgs[:n_train_fraction]
 
         self.train_imgs = train_imgs
         self.test_imgs = test_imgs
 
         # RELEVANT VALUES TO MODIFY:
-        self.n_iterations=5000
+        self.n_iterations=50
         # TODO: MUST BE EQUAL TO STEP DEFINED IN THE RBM CODE, ADAPT ACCORDINGLY
-        self.rbm_step = 20
+        self.rbm_step = 1
 
     def test_hidden_nodes(self):
-        # return
         start = 200
         end = 500
         step = 100
@@ -42,15 +41,14 @@ class TestRBM(unittest.TestCase):
                                              batch_size=10
             )
 
-            mean_reconst_loss = []    
-            rbm.cd1(visible_trainset=self.train_imgs, n_iterations=self.n_iterations, plot_loss=mean_reconst_loss)
-            average_reconstruction_loss.append(mean_reconst_loss)
+            logs = rbm.cd1(visible_trainset=self.train_imgs, n_iterations=self.n_iterations)
+            average_reconstruction_loss.append(logs["recon_losses"])
 
         for i, ndim_hidden in enumerate(range(start, end + 1, step)):
             plt.plot(average_reconstruction_loss[i], label=f'{ndim_hidden} hidden units')
         
         iter_amm = int((self.n_iterations+1)/self.rbm_step)
-        plt.xticks(range(iter_amm), labels=[str(i*self.rbm_step) for i in range(iter_amm)])
+        # plt.xticks(range(iter_amm), labels=[str(i*self.rbm_step) for i in range(iter_amm)])
 
         plt.title('Reconstruction Loss vs Iterations for Different Hidden Unit Sizes')
         plt.xlabel('Iteration')
@@ -63,18 +61,8 @@ class TestRBM(unittest.TestCase):
         weight_changes = []
         visible_bias_changes = []
         hidden_bias_changes = []
+        average_hidden_activations = []
 
-        # rbm = RestrictedBoltzmannMachine(ndim_visible=self.image_size[0]*self.image_size[1],
-        #                                  ndim_hidden=500,
-        #                                  is_bottom=True,
-        #                                  image_size=self.image_size,
-        #                                  is_top=False,
-        #                                  n_labels=10,
-        #                                  batch_size=20,
-        #                                  weight_changes=weight_changes,
-        #                                  visible_bias_changes=visible_bias_changes,
-        #                                  hidden_bias_changes=hidden_bias_changes
-        # )
         rbm = RestrictedBoltzmannMachine(ndim_visible=self.image_size[0]*self.image_size[1],
                                          ndim_hidden=500,
                                          is_bottom=True,
@@ -84,19 +72,18 @@ class TestRBM(unittest.TestCase):
                                          batch_size=20
         )
 
-        mean_reconst_loss = []    
-        # rbm.cd1(visible_trainset=self.train_imgs, n_iterations=self.n_iterations, plot_loss=mean_reconst_loss)
         logs = rbm.cd1(visible_trainset=self.train_imgs, n_iterations=self.n_iterations)
         weight_changes = logs["sum_of_weights_changes"][0]
         visible_bias_changes = logs["sum_of_weights_changes"][1]
         hidden_bias_changes = logs["sum_of_weights_changes"][2]
+        average_hidden_activations.append(logs["average_activations"])
 
         plt.plot(weight_changes, label="Weight changes")
         plt.plot(visible_bias_changes, label="Visible bias changes")
         plt.plot(hidden_bias_changes, label="Hidden bias changes")
         
         iter_amm = int((self.n_iterations+1)/self.rbm_step)
-        plt.xticks(range(iter_amm), labels=[str(i*self.rbm_step) for i in range(iter_amm)])
+        # plt.xticks(range(iter_amm), labels=[str(i*self.rbm_step) for i in range(iter_amm)])
 
         plt.title('Convergence of Weights and Biases')
         plt.xlabel('Epoch')
@@ -104,7 +91,46 @@ class TestRBM(unittest.TestCase):
         plt.legend()
         plt.show()
 
+        plt.plot(average_hidden_activations[i], label=f'{ndim_hidden} hidden units')
+
+        plt.title('Average Hidden Activations Value vs Iterations')
+        plt.xlabel('Iteration')
+        plt.ylabel('Average Hidden Activation Value')
+        plt.legend()
+        plt.show()
+
         for i in range(5):
             reconstructed_img = reconstruct_image(rbm, self.test_imgs[i])
             visualize_reconstruction(self.test_imgs[i].reshape(rbm.image_size), reconstructed_img)
-    
+
+    def test_batch_size(self):
+        start = 10
+        end = 20
+        step = 2
+
+        average_reconstruction_loss = []
+
+        for i, batch_size in enumerate(range(start, end + 1, step)):
+            rbm = RestrictedBoltzmannMachine(ndim_visible=self.image_size[0]*self.image_size[1],
+                                             ndim_hidden=500,
+                                             is_bottom=True,
+                                             image_size=self.image_size,
+                                             is_top=False,
+                                             n_labels=10,
+                                             batch_size=batch_size
+            )
+
+            logs = rbm.cd1(visible_trainset=self.train_imgs, n_iterations=self.n_iterations)
+            average_reconstruction_loss.append(logs["recon_losses"])
+
+        for i, batch_size in enumerate(range(start, end + 1, step)):
+            plt.plot(average_reconstruction_loss[i], label=f'{batch_size} mini-batch size')
+
+        iter_amm = int((self.n_iterations+1)/self.rbm_step)
+        # plt.xticks(range(iter_amm), labels=[str(i*self.rbm_step) for i in range(iter_amm)])
+
+        plt.title('Reconstruction Loss vs Iterations for Different Mini-Batch Sizes')
+        plt.xlabel('Iteration')
+        plt.ylabel('Average Reconstruction Loss')
+        plt.legend()
+        plt.show()

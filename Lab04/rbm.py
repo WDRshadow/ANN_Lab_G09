@@ -66,7 +66,7 @@ class RestrictedBoltzmannMachine():
 
         self.weight_decay = weight_decay
 
-        self.print_period = 20
+        self.print_period = 1
 
         # ensure_dir(visuals_save_path)
         self.rf = {  # receptive-fields. Only applicable when visible layer is input data
@@ -129,6 +129,7 @@ class RestrictedBoltzmannMachine():
         logs = {}
         logs["recon_losses"] = []
         logs["sum_of_weights_changes"] = [[], [], [], "w_vh, b_v, b_h"]
+        logs["average_activations"] = []
         for it in tqdm(range(n_iterations)):
             mini_idx = it % (visible_trainset.shape[0] // self.batch_size)
             if mini_idx == 0:
@@ -162,8 +163,9 @@ class RestrictedBoltzmannMachine():
                 logs["sum_of_weights_changes"][0].append(np.abs(self.delta_weight_vh).sum())
                 logs["sum_of_weights_changes"][1].append(np.abs(self.delta_bias_v).sum())
                 logs["sum_of_weights_changes"][2].append(np.abs(self.delta_bias_h).sum())
-                print(logs)
-                print("iteration=%7d recon_loss=%4.10f" % (it, recon_loss))
+                logs["average_activations"].append(np.mean(np.mean(h0, axis=0)))
+                # print(logs)
+                # print("iteration=%7d recon_loss=%4.10f" % (it, recon_loss))
 
                 # self.viz_weights_histogram(f"{it:06d}")
 
