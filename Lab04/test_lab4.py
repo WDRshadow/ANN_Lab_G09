@@ -25,7 +25,7 @@ class TestRBM(unittest.TestCase):
         self.rbm_step = 20
 
     def test_hidden_nodes(self):
-        return
+        # return
         start = 200
         end = 500
         step = 100

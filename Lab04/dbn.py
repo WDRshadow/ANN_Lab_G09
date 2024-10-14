@@ -82,14 +82,17 @@ class DeepBeliefNet():
         # pen+lbl->top
         p_top_v = np.concatenate((p_pen, lbl), axis=1)
         for _ in range(self.n_gibbs_recog):
-            p_top_h, _ = self.rbm_stack["pen+lbl--top"].get_h_given_v(p_top_v)
-            p_top_v, _ = self.rbm_stack["pen+lbl--top"].get_v_given_h(p_top_h)
+            _, top_h = self.rbm_stack["pen+lbl--top"].get_h_given_v(p_top_v)
+            p_top_v, _ = self.rbm_stack["pen+lbl--top"].get_v_given_h(top_h)
+            predicted_lbl = p_top_v[:, -n_labels:]
+            print(
+                "accuracy = %.2f%%" % (100. * np.mean(np.argmax(predicted_lbl, axis=1) == np.argmax(true_lbl, axis=1))))
 
         predicted_lbl = p_top_v[:,-n_labels:]
             
         print ("accuracy = %.2f%%"%(100.*np.mean(np.argmax(predicted_lbl,axis=1)==np.argmax(true_lbl,axis=1))))
         
-        return
+        return predicted_lbl
 
     def generate(self,true_lbl,name):
         
@@ -118,17 +121,17 @@ class DeepBeliefNet():
 
         # top->pen+lbl
         for _ in range(self.n_gibbs_gener):
-            p_top_h, _ = self.rbm_stack["pen+lbl--top"].get_h_given_v(p_top_v)
-            p_top_v, _ = self.rbm_stack["pen+lbl--top"].get_v_given_h(p_top_h)
+            _, top_h = self.rbm_stack["pen+lbl--top"].get_h_given_v(p_top_v)
+            p_top_v, _ = self.rbm_stack["pen+lbl--top"].get_v_given_h(top_h)
 
-        # pen->hid
-        p_pen = p_top_v[:,:-n_labels]
-        p_hid, _ = self.rbm_stack["hid--pen"].get_v_given_h_dir(p_pen)
+            # pen->hid
+            p_pen = p_top_v[:,:-n_labels]
+            p_hid, _ = self.rbm_stack["hid--pen"].get_v_given_h_dir(p_pen)
 
-        # hid->vis
-        _, vis = self.rbm_stack["vis--hid"].get_v_given_h_dir(p_hid)
+            # hid->vis
+            _, vis = self.rbm_stack["vis--hid"].get_v_given_h_dir(p_hid)
 
-        records.append( [ ax.imshow(vis.reshape(self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True, interpolation=None) ] )
+            records.append( [ ax.imshow(vis.reshape(self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True, interpolation=None) ] )
             
         anim = stitch_video(fig,records).save("%s.generate%d.mp4"%(name,np.argmax(true_lbl)))            
             

@@ -7,8 +7,8 @@ if __name__ == "__main__":
     image_size = [28,28]
     train_imgs,train_lbls,test_imgs,test_lbls = read_mnist(dim=image_size, n_train=60000, n_test=10000)
 
-    n_train_fraction = int(len(train_imgs) * 0.0005)
-    n_test_fraction = int(len(test_imgs) * 0.0005)
+    n_train_fraction = int(len(train_imgs) * 1)
+    n_test_fraction = int(len(test_imgs) * 1)
     print("Smaller sample size, first:", n_train_fraction, "values")
     train_imgs = train_imgs[:n_train_fraction]
     train_lbls = train_lbls[:n_train_fraction]
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     #                                  batch_size=10
     # )
     #
-    # rbm.cd1(visible_trainset=train_imgs, n_iterations=100)
+    # rbm.cd1(visible_trainset=train_imgs, n_iterations=1000)
     #
     # for i in range(5):
     #     reconstructed_img = reconstruct_image(rbm, test_imgs[i])
